@@ -1,0 +1,23 @@
+- name: Mongo server
+  hosts: service_mongo
+  become: yes
+  vars:
+    mongo_image: mongo:jammy
+    mongo_port: 27017
+  roles:
+    - install_docker
+  post_tasks:
+    - name: Run mongo container
+      community.docker.docker_container:
+        name: mongo
+        state: started
+        image: "{{ mongo_image }}"
+        restart_policy: always
+        published_ports:
+          - "{{ mongo_port }}:27017"
+        mounts:
+          - source: mongo
+            target: /data/db
+        env:
+          MONGO_INITDB_ROOT_USERNAME: "{{ mongo_initdb_root_username }}"
+          MONGO_INITDB_ROOT_PASSWORD: "{{ mongo_initdb_root_password }}"

@@ -1,0 +1,66 @@
+---
+- name: Postgres server
+  hosts: service_postgres
+  become: yes
+  vars:
+    postgres_entrypoint: "{{ docker_dir }}/postgres_entrypoint"
+    postgres_port: 5432
+    postgres_image: postgres:15.1-alpine
+  roles:
+    - install_docker
+  post_tasks:
+    - name: Create docker directory
+      file:
+        path: "{{ docker_dir }}"
+        state: directory
+        owner: "{{ files_owner }}"
+        group: docker
+        mode: "{{ docker_dir_mode }}"
+    
+    - name: Create postgres entrypoint directory
+      file:
+        path: "{{ postgres_entrypoint }}"
+        state: directory
+        owner: "{{ files_owner }}"
+        group: docker
+        mode: "{{ docker_dir_mode }}"
+
+    - name: Copy initial database script
+      ansible.builtin.copy:
+        src: ./files/init_db.sh
+        dest: "{{ postgres_entrypoint }}/init_db.sh"
+        owner: "{{ files_owner }}"
+        group: docker
+        mode: "{{ files_mode }}"
+
+    - name: Copy initial database dump
+      ansible.builtin.copy:
+        src: ./files/initial_data.dump
+        dest: "{{ postgres_entrypoint }}/initial_data.dump"
+        owner: "{{ files_owner }}"
+        group: docker
+        mode: "{{ files_mode }}"
+
+    - name: Create .env from template
+      ansible.builtin.template:
+        src: ./templates/.env.postgres.j2
+        dest: "{{ docker_dir }}/.env"
+        owner: "{{ files_owner }}"
+        group: docker
+        mode: "{{ files_mode }}"
+    
+    - name: Run postgres container
+      community.docker.docker_container:
+        name: postgres
+        state: started
+        image: "{{ postgres_image }}"
+        restart_policy: always
+        published_ports:
+          - "{{ postgres_port }}:5432"
+        env_file: "{{ docker_dir }}/.env"
+        mounts:
+          - source: postgres_volume
+            target: /var/lib/postgresql/data
+          - type: bind
+            source: "{{ postgres_entrypoint }}"
+            target: /docker-entrypoint-initdb.d

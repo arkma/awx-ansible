@@ -1,0 +1,55 @@
+# virtualmachines:
+#   hosts:
+#     vm01:
+#       ansible_host: 192.168.2.55
+#       ansible_ssh_user: vagrant
+#       ansible_ssh_private_key_file: ~/vagrant_keys/private_key
+#     gcloudvm:
+#       ansible_host: 35.224.128.246
+#       ansible_ssh_user: Programmer
+#       ansible_ssh_private_key_file: ~/gcloud_keys/gcloud_key
+    
+#     gcloud_tomcat:
+#       ansible_host: 34.71.251.78
+#       ansible_ssh_user: programmer
+#       ansible_ssh_private_key_file: ~/gcloud_keys/tomcat/gcloud_tomcat
+#     gcloud_postgres:
+#       ansible_host: 34.27.172.36
+#       ansible_ssh_user: programmer
+#       ansible_ssh_private_key_file: ~/gcloud_keys/postgres/gcloud_postgres
+#     gcloud_redis:
+#       ansible_host: 34.66.216.147
+#       ansible_ssh_user: programmer
+#       ansible_ssh_private_key_file: ~/gcloud_keys/redis/gcloud_redis
+#     gcloud_mongo:
+#       ansible_host: 34.69.5.80
+#       ansible_ssh_user: programmer
+#       ansible_ssh_private_key_file: ~/gcloud_keys/mongo/gcloud_mongo
+#     gcloud_graphana:
+#       ansible_host: 34.30.79.95
+#       ansible_ssh_user: programmer
+#       ansible_ssh_private_key_file: ~/gcloud_keys/graphana/gcloud_graphana
+
+
+virtualmachines:
+  hosts:
+    gcloud_tomcat:
+      ansible_host: 34.123.47.149
+      ansible_ssh_user: programmer
+      ansible_ssh_private_key_file: ~/gcloud_keys/tomcat/gcloud_tomcat
+    gcloud_postgres:
+      ansible_host: 104.154.137.130
+      ansible_ssh_user: programmer
+      ansible_ssh_private_key_file: ~/gcloud_keys/postgres/gcloud_postgres
+    gcloud_redis:
+      ansible_host: 35.202.51.249
+      ansible_ssh_user: programmer
+      ansible_ssh_private_key_file: ~/gcloud_keys/redis/gcloud_redis
+    gcloud_mongo:
+      ansible_host: 34.172.129.252
+      ansible_ssh_user: programmer
+      ansible_ssh_private_key_file: ~/gcloud_keys/mongo/gcloud_mongo
+    gcloud_graphana:
+      ansible_host: 34.31.77.87
+      ansible_ssh_user: programmer
+      ansible_ssh_private_key_file: ~/gcloud_keys/graphana/gcloud_graphana

@@ -1,0 +1,53 @@
+- name: Tomcat server
+  hosts: service_tomcat
+  become: yes
+  vars:
+    schedule_image: "blueguys/schedule-app:latest"
+    schedule_port: 8080
+  pre_tasks:
+    - name: Gather facts from ALL hosts (regardless of limit or tags)
+      setup:
+      delegate_to: "{{ item }}"
+      delegate_facts: True
+      when: hostvars[item]['ansible_default_ipv4'] is not defined
+      with_items: "{{ groups['all'] }}"
+
+    # - name: Set useful facts
+    #   set_fact:
+    #     postgres_ip: hostvars["{{ postgres_name }}"]['ansible_default_ipv4']['address']
+    #     redis_ip: hostvars["{{ redis_name }}"]['ansible_default_ipv4']['address']
+    #     mongo_url: hostvars["{{ mongo_name }}"]['ansible_default_ipv4']['address']
+    - name: Set useful facts
+      set_fact:
+        postgres_ip: "{{ hostvars['postgres-schedule']['ansible_default_ipv4']['address'] }}"
+        redis_ip: "{{ hostvars['redis-schedule']['ansible_default_ipv4']['address'] }}"
+        mongo_url: "{{ hostvars['mongo-schedule']['ansible_default_ipv4']['address'] }}"
+
+  roles:
+    - install_docker
+  post_tasks:
+    - name: Create docker directory
+      file:
+        path: "{{ docker_dir }}"
+        state: directory
+        owner: "{{ files_owner }}"
+        group: docker
+        mode: "{{ docker_dir_mode }}"
+
+    - name: Create .env from template
+      ansible.builtin.template:
+        src: ./templates/.env.tomcat.j2
+        dest: "{{ docker_dir }}/.env"
+        owner: "{{ files_owner }}"
+        group: docker
+        mode: "{{ files_mode }}"
+    
+    - name: Run schedule app container
+      community.docker.docker_container:
+        name: schedule-app
+        state: started
+        image: "{{ schedule_image }}"
+        restart_policy: always
+        published_ports:
+          - "{{ schedule_port }}:8080"
+        env_file: "{{ docker_dir }}/.env"

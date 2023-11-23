@@ -1,0 +1,18 @@
+---
+- name: Include the postgres playbook
+  ansible.builtin.import_playbook: postgres.yml
+
+- name: Include the mongo playbook
+  ansible.builtin.import_playbook: mongo.yml
+
+- name: Include the redis playbook
+  ansible.builtin.import_playbook: redis.yml
+
+- name: Include the tomcat playbook
+  ansible.builtin.import_playbook: tomcat.yml
+
+- name: Include the graphana playbook
+  ansible.builtin.import_playbook: graphana.yml
+
+- name: Include the node exporter playbook
+  ansible.builtin.import_playbook: node_exporter.yml

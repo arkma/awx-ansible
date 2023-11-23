@@ -1,0 +1,33 @@
+- name: Node exporter install
+  hosts: env_prod
+  become: yes
+  tasks:
+    # - name: Check if Docker is installed
+    #   ansible.builtin.command: docker --version
+    #     ignore_errors: true
+    #     register: docker_check
+
+    # - name: Ensure Docker is running
+    #   ansible.builtin.service:
+    #     name: docker
+    #     state: started
+    #   when: docker_check.rc == 0 
+
+    - name: Run node exporter container
+      community.docker.docker_container:
+        name: node-exporter
+        state: started
+        image: "{{ node_exporter_image }}"
+        restart_policy: always
+        published_ports:
+          - "{{ node_exporter_port }}:9100"
+        mounts:
+          - type: bind
+            source: /proc
+            target: /host/proc:ro
+          - type: bind
+            source: /sys
+            target: /host/sys:ro
+          - type: bind
+            source: /
+            target: /rootfs:ro

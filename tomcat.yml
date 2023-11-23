@@ -46,6 +46,7 @@
       community.docker.docker_container:
         name: schedule-app
         state: started
+        pull: true
         image: "{{ schedule_image }}"
         restart_policy: always
         published_ports:

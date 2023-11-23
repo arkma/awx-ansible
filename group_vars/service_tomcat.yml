@@ -18,8 +18,8 @@
 
 postgres_port: 5432
 
-postgres_admin_name: schedule
-postgres_admin_password: 9h4m03JQURp7
+#postgres_admin_name: schedule
+#postgres_admin_password: 9h4m03JQURp7
 
 # redis_ip: 35.202.51.249
 redis_port: 6379

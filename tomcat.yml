@@ -1,54 +1,47 @@
 - name: Tomcat server
   hosts: service_tomcat
   become: yes
-  vars:
-    schedule_image: "blueguys/schedule-app:latest"
-    schedule_port: 8080
   pre_tasks:
-    - name: Gather facts from ALL hosts (regardless of limit or tags)
+    - name: Gather facts from hosts without private_ip defined
       setup:
       delegate_to: "{{ item }}"
       delegate_facts: True
-      when: hostvars[item]['ansible_default_ipv4'] is not defined
+      when: hostvars[item]['private_ip'] is not defined
       with_items: "{{ groups['all'] }}"
 
-    # - name: Set useful facts
-    #   set_fact:
-    #     postgres_ip: hostvars["{{ postgres_name }}"]['ansible_default_ipv4']['address']
-    #     redis_ip: hostvars["{{ redis_name }}"]['ansible_default_ipv4']['address']
-    #     mongo_url: hostvars["{{ mongo_name }}"]['ansible_default_ipv4']['address']
-    - name: Set useful facts
+    - name: Set required ip variables
       set_fact:
-        postgres_ip: "{{ hostvars['postgres-schedule']['ansible_default_ipv4']['address'] }}"
-        redis_ip: "{{ hostvars['redis-schedule']['ansible_default_ipv4']['address'] }}"
-        mongo_url: "{{ hostvars['mongo-schedule']['ansible_default_ipv4']['address'] }}"
+        postgres_ip: "{{ hostvars[groups['service_postgres'] | first]['private_ip'] }}"
+        redis_ip: "{{ hostvars[groups['service_redis'] | first]['private_ip'] }}"
+        mongo_url: "{{ hostvars[groups['service_mongo'] | first]['private_ip']}}"
 
   roles:
     - install_docker
+
   post_tasks:
     - name: Create docker directory
       file:
         path: "{{ docker_dir }}"
         state: directory
-        owner: "{{ files_owner }}"
-        group: docker
+        owner: "{{ docker_files_owner }}"
+        group: "{{ docker_group }}"
         mode: "{{ docker_dir_mode }}"
 
     - name: Create .env from template
       ansible.builtin.template:
         src: ./templates/.env.tomcat.j2
         dest: "{{ docker_dir }}/.env"
-        owner: "{{ files_owner }}"
-        group: docker
-        mode: "{{ files_mode }}"
+        owner: "{{ docker_files_owner }}"
+        group: "{{ docker_group }}"
+        mode: "{{ docker_files_mode }}"
     
     - name: Run schedule app container
       community.docker.docker_container:
-        name: schedule-app
-        state: started
-        pull: true
+        name: "{{ schedule_container_name }}"
         image: "{{ schedule_image }}"
+        state: started
         restart_policy: always
+        pull: true
         published_ports:
           - "{{ schedule_port }}:8080"
         env_file: "{{ docker_dir }}/.env"

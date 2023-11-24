@@ -26,4 +26,6 @@ scrape_configs:
     # scheme defaults to 'http'.
 
     static_configs:
-      - targets: [{% for host in groups['all'] %} {% if hostvars[host]['ansible_default_ipv4']['address'] is defined %} "{{ hostvars[host]['ansible_default_ipv4']['address'] }}:{{ node_exporter_port }}"{% if not loop.last %},{% endif %} {% endif %}{% endfor %}]
+      - targets: {{ groups['all'] | map('extract', hostvars, 'private_ip') | map('regex_replace', '$', ':' ~ node_exporter_port) | map('quote') | list }}
+
+

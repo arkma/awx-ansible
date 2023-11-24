@@ -1,20 +1,13 @@
 node_exporter_image: "prom/node-exporter:v1.3.1"
+node_exporter_container_name: node-exporter
 node_exporter_port: 9100
 
 docker_dir: /opt/docker
 docker_dir_mode: '0755'
 docker_users:
       - docker_user
-files_owner: docker_user
-files_mode: '0755'
-
+docker_files_owner: docker_user
+docker_files_mode: '0755'
+docker_group: docker
 
 ansible_ssh_user: sa_101994008222971342723
-ansible_ssh_private_key_file: ~/iam_user_keys/awx-compute/sa_service_key
-
-postgres_name: postgres-schedule
-grafana_name: grafana-schedule
-redis_name: redis-schedule
-mongo_name: mongo-schedule
-tomcat_name: tomcat-schedule
-

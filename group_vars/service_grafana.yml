@@ -1,2 +1,12 @@
 grafana_port: 3000
 prometheus_port: 9090
+
+grafana_image: grafana/grafana:8.5.3-ubuntu
+prometheus_image: prom/prometheus:v2.36.0
+
+grafana_container_name: grafana
+prometheus_container_name: prometheus
+
+prometheus_config_dir: "/etc/docker/prometheus"
+prometheus_config: "{{ prometheus_config_dir }}/prometheus.yml"
+prometheus_config_template: "./templates/prometheus_default.j2"

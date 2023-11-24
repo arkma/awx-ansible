@@ -1,2 +1,3 @@
-mongo_initdb_root_username: root
-mongo_initdb_root_password: 4MMq0fDOf8sY
+mongo_image: mongo:jammy
+mongo_container_name: mongo
+mongo_port: 27017

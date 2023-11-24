@@ -12,10 +12,33 @@
 #       ansible.builtin.debug:
 #         msg: "{{ lookup('ansible.builtin.template', './templates/prometheus_default.j2') }}"
 
+# - name: Print all hosts
+#   hosts: all
+#   tasks:
+#     - name: Print all  hosts ips
+#       ansible.builtin.debug:
+#         var: hostvars[item]['ansible_default_ipv4']['address']
+#       with_items: "{{ groups['all'] }}"
+
 - name: Print all hosts
-  hosts: all
+  hosts: service_grafana
   tasks:
-    - name: Print all  hosts ips
-      ansible.builtin.debug:
-        var: hostvars[item]['ansible_default_ipv4']['address']
+    - name: Gather facts from ALL hosts (regardless of limit or tags)
+      setup:
+      delegate_to: "{{ item }}"
+      delegate_facts: True
+      when: hostvars[item]['private_ip'] is not defined
       with_items: "{{ groups['all'] }}"
+    - name: Print prometheus config file
+      ansible.builtin.debug:
+        msg: "{{ lookup('ansible.builtin.template', './templates/prometheus_default.j2') }}"
+    - name: Set useful facts
+      set_fact:
+        postgres_ip: "{{ hostvars[groups['service_postgres'] | first]['private_ip'] }}"
+        redis_ip: "{{ hostvars[groups['service_redis'] | first]['private_ip'] }}"
+        mongo_url: "{{ hostvars[groups['service_mongo'] | first]['private_ip']}}"
+    - name: Debug facts
+      ansible.builtin.debug:
+        msg: "postgres_ip: {{ postgres_ip }}, redis_ip: {{ redis_ip }}, mongo_url: {{ mongo_url }}"
+
+      

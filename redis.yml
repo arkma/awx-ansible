@@ -1,17 +1,14 @@
 - name: Redis server
   hosts: service_redis
   become: yes
-  vars:
-    redis_port: 6379
-    redis_image: redis:alpine
   roles:
     - install_docker
   post_tasks:
     - name: Run redis container
       community.docker.docker_container:
-        name: redis
-        state: started
+        name: "{{ redis_container_name }}"
         image: "{{ redis_image }}"
+        state: started
         restart_policy: always
         published_ports:
           - "{{ redis_port }}:6379"

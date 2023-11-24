@@ -1,17 +1,14 @@
 - name: Mongo server
   hosts: service_mongo
   become: yes
-  vars:
-    mongo_image: mongo:jammy
-    mongo_port: 27017
   roles:
     - install_docker
   post_tasks:
     - name: Run mongo container
       community.docker.docker_container:
-        name: mongo
-        state: started
+        name: "{{ mongo_container_name }}"
         image: "{{ mongo_image }}"
+        state: started
         restart_policy: always
         published_ports:
           - "{{ mongo_port }}:27017"

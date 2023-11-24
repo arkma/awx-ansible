@@ -1,0 +1,65 @@
+- name: Grafana server
+  hosts: service_grafana
+  become: yes
+  pre_tasks:
+    - name: Gather facts from ALL hosts (regardless of limit or tags)
+      setup:
+      delegate_to: "{{ item }}"
+      delegate_facts: True
+      when: hostvars[item]['ansible_default_ipv4'] is not defined
+      with_items: "{{ groups['all'] }}"
+
+  roles:
+    - install_docker
+  post_tasks:
+    - name: Run grafana container
+      community.docker.docker_container:
+        name: "{{ grafana_container_name }}"
+        image: "{{ grafana_image }}"
+        state: started
+        restart_policy: always
+        published_ports:
+          - "{{ grafana_port }}:3000"
+        mounts:
+          - source: grafana_volume
+            target: /var/lib/grafana
+
+    - name: Add prometheus directory
+      file:
+        path: "{{ prometheus_config_dir }}"
+        state: directory
+        owner: "{{ docker_files_owner }}"
+        group: "{{ docker_group }}"
+        mode: "{{ docker_dir_mode }}"
+    
+    - name: Add prometheus config files with all adresses
+      ansible.builtin.template:
+        src: "{{ prometheus_config_template }}"
+        dest: "{{ prometheus_config }}"
+        owner: "{{ docker_files_owner }}"
+        group: "{{ docker_group }}"
+        mode: "{{ docker_files_mode }}"
+
+    - name: Run prometheus container
+      community.docker.docker_container:
+        name: "{{ prometheus_container_name }}"
+        image: "{{ prometheus_image }}"
+        state: started
+        restart_policy: always
+        published_ports:
+          - "{{ prometheus_port }}:9090"
+        mounts:
+          - source: prom_data
+            target: /prometheus
+          - source: prom_configs
+            target: /etc/prometheus
+          - type: bind
+            source: "{{ prometheus_config }}"
+            target: /etc/prometheus/prometheus.yml
+
+    - name: Add bridge network between prometheus and grafana
+      docker_network:
+        name: grafana_prometheus_bridge
+        connected:
+          - "{{ grafana_container_name }}"
+          - "{{ prometheus_container_name }}"

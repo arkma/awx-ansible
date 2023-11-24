@@ -1,23 +1,12 @@
 - name: Node exporter install
-  hosts: env_prod
+  hosts: all
   become: yes
   tasks:
-    # - name: Check if Docker is installed
-    #   ansible.builtin.command: docker --version
-    #     ignore_errors: true
-    #     register: docker_check
-
-    # - name: Ensure Docker is running
-    #   ansible.builtin.service:
-    #     name: docker
-    #     state: started
-    #   when: docker_check.rc == 0 
-
     - name: Run node exporter container
       community.docker.docker_container:
-        name: node-exporter
-        state: started
+        name: "{{ node_exporter_container_name }}"
         image: "{{ node_exporter_image }}"
+        state: started
         restart_policy: always
         published_ports:
           - "{{ node_exporter_port }}:9100"

@@ -11,8 +11,8 @@
 - name: Include the tomcat playbook
   ansible.builtin.import_playbook: tomcat.yml
 
-- name: Include the graphana playbook
-  ansible.builtin.import_playbook: graphana.yml
+- name: Include the grafana playbook
+  ansible.builtin.import_playbook: grafana.yml
 
 - name: Include the node exporter playbook
   ansible.builtin.import_playbook: node_exporter.yml

@@ -1,9 +1,7 @@
 - name: Mongo server
   hosts: service_mongo
   become: yes
-  roles:
-    - install_docker
-  post_tasks:
+  tasks:
     - name: Run mongo container
       community.docker.docker_container:
         name: "{{ mongo_container_name }}"
@@ -18,3 +16,6 @@
         env:
           MONGO_INITDB_ROOT_USERNAME: "{{ mongo_initdb_root_username }}"
           MONGO_INITDB_ROOT_PASSWORD: "{{ mongo_initdb_root_password }}"
+        healthcheck:
+          start_period: 10s
+          test: ["CMD", "mongosh", "--quiet", "127.0.0.1/test", "--eval", "'quit(db.runCommand({ ping: 1 }).ok ? 0 : 2)'"]

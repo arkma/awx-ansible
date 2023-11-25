@@ -1,9 +1,7 @@
 - name: Redis server
   hosts: service_redis
   become: yes
-  roles:
-    - install_docker
-  post_tasks:
+  tasks:
     - name: Run redis container
       community.docker.docker_container:
         name: "{{ redis_container_name }}"
@@ -15,3 +13,6 @@
         mounts:
           - source: redis
             target: /root/redis
+        healthcheck:
+          start_period: 10s
+          test: ["CMD-SHELL", "redis-cli ping | grep PONG"]

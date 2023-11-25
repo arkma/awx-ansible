@@ -2,9 +2,12 @@
 - name: Postgres server
   hosts: service_postgres
   become: yes
-  roles:
-    - install_docker
-  post_tasks:
+  tasks:
+    - name: Install required packages for postgres module
+      apt:
+        name: "{{ postgres_required_packages }}"
+        state: present
+    
     - name: Create docker directory
       file:
         path: "{{ docker_dir }}"
@@ -13,29 +16,13 @@
         group: "{{ docker_group }}"
         mode: "{{ docker_dir_mode }}"
     
-    - name: Create postgres entrypoint directory
+    - name: Create postgres data directory
       file:
-        path: "{{ postgres_entrypoint }}"
+        path: "{{ postgres_files_dir }}"
         state: directory
         owner: "{{ docker_files_owner }}"
         group: "{{ docker_group }}"
         mode: "{{ docker_dir_mode }}"
-
-    - name: Copy initial database script
-      ansible.builtin.copy:
-        src: "{{ postgres_initdb_script_src }}"
-        dest: "{{ postgres_initdb_script_dest }}"
-        owner: "{{ docker_files_owner }}"
-        group: "{{ docker_group }}"
-        mode: "{{ docker_files_mode }}"
-
-    - name: Copy initial database dump
-      ansible.builtin.copy:
-        src: "{{ postgres_initial_data_src }}"
-        dest: "{{ postgres_initial_data_dest }}"
-        owner: "{{ docker_files_owner }}"
-        group: "{{ docker_group }}"
-        mode: "{{ docker_files_mode }}"
 
     - name: Create .env from template
       ansible.builtin.template:
@@ -44,7 +31,7 @@
         owner: "{{ docker_files_owner }}"
         group: "{{ docker_group }}"
         mode: "{{ docker_files_mode }}"
-    
+
     - name: Run postgres container
       community.docker.docker_container:
         name: "{{ postgres_container_name }}"
@@ -57,6 +44,56 @@
         mounts:
           - source: postgres_volume
             target: /var/lib/postgresql/data
-          - type: bind
-            source: "{{ postgres_entrypoint }}"
-            target: /docker-entrypoint-initdb.d
+        healthcheck:
+          start_period: 30s
+          test: ["CMD-SHELL", "pg_isready"]
+
+    - name: Wait postgres container is running
+      community.docker.docker_container_info:
+        name: "{{ postgres_container_name }}"
+      register: postgres_container
+      until: postgres_container.container.State.Health.Status == "healthy"
+      retries: 5
+      delay: 10
+
+    - name: Create admin user
+      community.postgresql.postgresql_user:
+        name: "{{ postgres_admin_name }}"
+        password: "{{ postgres_admin_password }}"
+        login_host: "{{ postgres_host }}"
+        port: "{{ postgres_port }}"
+        login_user: "{{ postgres_superuser_name }}"
+        login_password: "{{ postgres_superuser_password }}"
+
+    - name: Create database
+      community.postgresql.postgresql_db:
+        name: "{{ postgres_database_name }}"
+        owner: "{{ postgres_admin_name }}"
+        state: present
+        login_host: "{{ postgres_host }}"
+        port: "{{ postgres_port }}"
+        login_user: "{{ postgres_superuser_name }}"
+        login_password: "{{ postgres_superuser_password }}"
+
+    - name: Restore intial dump for staging
+      block:
+        - name: Copy initial database dump
+          ansible.builtin.copy:
+            src: "{{ postgres_initial_data_src }}"
+            dest: "{{ postgres_initial_data_dest }}"
+            owner: "{{ docker_files_owner }}"
+            group: "{{ docker_group }}"
+            mode: "{{ docker_files_mode }}"
+
+        - name: Restore database from initial dump
+          community.postgresql.postgresql_db:
+            name: "{{ postgres_database_name }}"
+            state: restore
+            target: "{{ postgres_initial_data_dest }}"
+            owner: "{{ postgres_admin_name }}"
+            login_host: "{{ postgres_host }}"
+            port: "{{ postgres_port }}"
+            login_user: "{{ postgres_admin_name }}"
+            login_password: "{{ postgres_admin_password }}"
+      when: labels.env == "staging"
+      

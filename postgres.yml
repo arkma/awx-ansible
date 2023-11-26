@@ -95,5 +95,5 @@
             port: "{{ postgres_port }}"
             login_user: "{{ postgres_admin_name }}"
             login_password: "{{ postgres_admin_password }}"
-      when: labels.env == "staging"
+      when: labels.env == "stage"
       

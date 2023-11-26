@@ -1,6 +1,5 @@
 postgres_image: postgres:15.1-alpine
 postgres_container_name: postgres
-postgres_port: 5432
 postgres_host: localhost
 
 postgres_files_dir: "{{ docker_dir }}/postgres_files"

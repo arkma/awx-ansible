@@ -6,7 +6,7 @@ grafana_container_name: grafana
 prometheus_container_name: prometheus
 
 
-grafana_port: 3000
+grafana_port: 27875
 prometheus_port: 9090
 
 grafana_url: "http://localhost:{{ grafana_port }}/"
@@ -22,14 +22,14 @@ grafana_datasources:
     url: "http://{{ prometheus_container_name }}:9090/"
   - name: Redis
     type: redis-datasource
-    url: "redis://{{redis_ip}}:{{ redis_port }}"
+    url: "redis://{{ redis_ip }}:{{ redis_port }}"
 
 # Grafana dashboards
 grafana_dashboards:
   - name: Prometheus full node exporter
     url: "https://grafana.com/api/dashboards/1860/revisions/33/download"
-  - name: Redis
-    url: "https://grafana.com/api/dashboards/12776/revisions/2/download"
+  # - name: Redis
+  #   url: "https://grafana.com/api/dashboards/12776/revisions/2/download"
 
 
 prometheus_config_dir: "/etc/docker/prometheus"

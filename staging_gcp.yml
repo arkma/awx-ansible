@@ -1,20 +1,18 @@
 plugin: google.cloud.gcp_compute
-zones:
-  - us-central1-a
+# zones:
+#   - us-central1-a
 projects:
   - softseve-blue-team
-# service_account_file: ~/iam_user_keys/awx-compute/awx-compute.json
+service_account_file: ~/iam_user_keys/awx-compute/awx-compute.json
 auth_kind: serviceaccount
 keyed_groups:
   - key: labels.env
     prefix: env
   - key: labels.service
     prefix: service
-gorups:
-  - docker_group:
 filters:
   - labels.app = "schedule"
-  - labels.env = "staging"
+  - labels.env = "stage"
 hostnames:
   - name
   - public_ip

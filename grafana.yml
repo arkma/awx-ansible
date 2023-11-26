@@ -1,7 +1,7 @@
 - name: Grafana server
   hosts: service_grafana
   become: yes
-  pre_tasks:
+  tasks:
     - name: Gather facts from ALL hosts (regardless of limit or tags)
       setup:
       delegate_to: "{{ item }}"
@@ -9,9 +9,10 @@
       when: hostvars[item]['ansible_default_ipv4'] is not defined
       with_items: "{{ groups['all'] }}"
 
-  roles:
-    - install_docker
-  post_tasks:
+    - name: Set required ip variables
+      set_fact:
+        redis_ip: "{{ hostvars[groups['service_redis'] | first]['private_ip'] }}"
+
     - name: Run grafana container
       community.docker.docker_container:
         name: "{{ grafana_container_name }}"
@@ -23,6 +24,11 @@
         mounts:
           - source: grafana_volume
             target: /var/lib/grafana
+        env:
+          GF_INSTALL_PLUGINS: "{{ grafana_plugins | join(', ') }}"
+        healthcheck:
+          test:  ["CMD-SHELL", "grafana-cli", "plugins", "ls"]
+          # test: ["CMD-SHELL", "curl --output /dev/null --silent --fail http://127.0.0.1:3000/api/health || exit 1"]
 
     - name: Add prometheus directory
       file:
@@ -56,6 +62,8 @@
           - type: bind
             source: "{{ prometheus_config }}"
             target: /etc/prometheus/prometheus.yml
+        healthcheck:
+          test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:9090/status || exit 1"]
 
     - name: Add bridge network between prometheus and grafana
       docker_network:
@@ -63,3 +71,19 @@
         connected:
           - "{{ grafana_container_name }}"
           - "{{ prometheus_container_name }}"
+
+    - name: Configure grafana datasources
+      community.grafana.grafana_datasource:
+        name: "{{ item.name }}"
+        ds_type: "{{ item.type }}"
+        ds_url: "{{ item.url }}"
+        access: proxy
+        tls_skip_verify: true
+        grafana_url: "{{ grafana_url }}"
+      loop: "{{ grafana_datasources }}"
+
+    - name: Configure grafana dashboards 
+      community.grafana.grafana_dashboard:
+        dashboard_url: "{{ item.url }}"
+        grafana_url: "{{ grafana_url }}"
+      loop: "{{ grafana_dashboards }}"

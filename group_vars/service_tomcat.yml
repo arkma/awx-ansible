@@ -1,8 +1,8 @@
-postgres_port: 5432
-redis_port: 6379
-
+---
+# Mongo
 mongo_database: schedules
 
+# Tomcat
 schedule_image: "blueguys/schedule-app:latest"
 schedule_container_name: schedule-app
-schedule_port: 8080
+schedule_port: 28275

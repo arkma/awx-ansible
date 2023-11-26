@@ -1,6 +1,6 @@
 plugin: google.cloud.gcp_compute
-zones:
-  - us-central1-a
+# zones:
+#   - us-central1-a
 projects:
   - softseve-blue-team
 service_account_file: ~/iam_user_keys/awx-compute/awx-compute.json

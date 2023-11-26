@@ -1,5 +1,6 @@
 - name: Node exporter install
   hosts: all
+  strategy: free
   become: yes
   tasks:
     - name: Run node exporter container
@@ -20,3 +21,5 @@
           - type: bind
             source: /
             target: /rootfs:ro
+        healthcheck:
+          test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:9100 || exit 1"]

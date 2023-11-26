@@ -1,7 +1,19 @@
+---
+# Node exporter
 node_exporter_image: "prom/node-exporter:v1.3.1"
 node_exporter_container_name: node-exporter
-node_exporter_port: 9100
+node_exporter_port: 18216
 
+# Redis
+redis_port: 60210
+
+# Postgres
+postgres_port: 46184
+
+# Mongo
+mongo_port: 14587
+
+# Docker
 docker_dir: /opt/docker
 docker_dir_mode: '0755'
 docker_users:
@@ -10,4 +22,6 @@ docker_files_owner: docker_user
 docker_files_mode: '0755'
 docker_group: docker
 
+# Ansible
 ansible_ssh_user: sa_101994008222971342723
+ansible_port: 22

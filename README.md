@@ -6,10 +6,10 @@ This repository contains Ansible playbooks, roles, and configurations to manage 
 
 - **files:** Contains an initial database dump used to restore the database on the staging environment.
 - **group_vars:** Contains the `all.yml` file with key variables for different services and configurations. Also includes `service_*.yml`, storing specific service variables.
-- **install_docker Role:** Installs Docker on Ubuntu machines.
+- **`install_docker` role:** Installs Docker on Ubuntu machines.
 - **templates:** Holds Jinja2 templates for application configurations.
-- **Dynamic Inventories:** Includes `production_gcp.yml` and `staging_gcp.yml` for production and staging environments respectively.
-- **Playbooks:** Docker, Postgres, Tomcat, Grafana, MongoDB, Redis, Node Exporter, and a main playbook orchestrating all.
+- **dynamic inventories:** Includes `production_gcp.yml` and `staging_gcp.yml` for production and stage environments respectively.
+- **playbooks:** Docker, Postgres, Tomcat, Grafana, MongoDB, Redis, Node Exporter, and a main playbook orchestrating all.
 
 ## Usage:
 
@@ -29,4 +29,5 @@ This repository contains Ansible playbooks, roles, and configurations to manage 
 - Refer to playbook files for specific configuration details and adjustments.
 - Ensure proper access and credentials for connecting to specified environments and services.
 - Ensure all machines in your GCP have appropriate labels such as `env:stage|prod` and `app:schedule`.
+- Role `install_docker` designed for installing Docker on Ubuntu machines 
 

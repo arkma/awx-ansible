@@ -1,7 +1,17 @@
 ---
 - name: Postgres server
   hosts: localhost
-  # become: yes
+  vars:
+    postgres_host: "YOUR_POSTGRES_HOST"
+    postgres_login_user: "YOUR_POSTGRES_USER"
+    postgres_login_password: "YOUR_POSTGRES_PASSWORD"
+    postgres_port: 5432
+    postgres_admin_user: "YOUR_ADMIN_USER"
+    postgres_admin_password: "YOUR_ADMIN_PASSWORD"
+    postgres_schedule_database_name: schedule
+    postgres_restore_dump: true
+    postgres_initial_data_dest: "./files/initial_data.sql"
+    postgre_admin_roles: "CREATEDB"
   tasks:
     - name: Create admin user
       community.postgresql.postgresql_user:
@@ -11,7 +21,7 @@
         port: "{{ postgres_port  }}"
         name: "{{ postgres_admin_user }}"
         password: "{{ postgres_admin_password }}"
-        role_attr_flags: "CREATEDB"
+        role_attr_flags: "{{ postgre_admin_roles }}"
 
     - name: Create database
       community.postgresql.postgresql_db:

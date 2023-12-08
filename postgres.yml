@@ -1,99 +1,35 @@
 ---
 - name: Postgres server
-  hosts: service_postgres
-  become: yes
+  hosts: localhost
+  # become: yes
   tasks:
-    - name: Install required packages for postgres module
-      apt:
-        name: "{{ postgres_required_packages }}"
-        state: present
-    
-    - name: Create docker directory
-      file:
-        path: "{{ docker_dir }}"
-        state: directory
-        owner: "{{ docker_files_owner }}"
-        group: "{{ docker_group }}"
-        mode: "{{ docker_dir_mode }}"
-    
-    - name: Create postgres data directory
-      file:
-        path: "{{ postgres_files_dir }}"
-        state: directory
-        owner: "{{ docker_files_owner }}"
-        group: "{{ docker_group }}"
-        mode: "{{ docker_dir_mode }}"
-
-    - name: Create .env from template
-      ansible.builtin.template:
-        src: "{{ postgres_template_env_src }}"
-        dest: "{{ postgres_env_dest }}"
-        owner: "{{ docker_files_owner }}"
-        group: "{{ docker_group }}"
-        mode: "{{ docker_files_mode }}"
-
-    - name: Run postgres container
-      community.docker.docker_container:
-        name: "{{ postgres_container_name }}"
-        image: "{{ postgres_image }}"
-        state: started
-        restart_policy: always
-        published_ports:
-          - "{{ postgres_port }}:5432"
-        env_file: "{{ postgres_env_dest }}"
-        mounts:
-          - source: postgres_volume
-            target: /var/lib/postgresql/data
-        healthcheck:
-          start_period: 30s
-          test: ["CMD-SHELL", "pg_isready"]
-
-    - name: Wait postgres container is running
-      community.docker.docker_container_info:
-        name: "{{ postgres_container_name }}"
-      register: postgres_container
-      until: postgres_container.container.State.Health.Status == "healthy"
-      retries: 5
-      delay: 10
-
     - name: Create admin user
       community.postgresql.postgresql_user:
-        name: "{{ postgres_admin_name }}"
+        login_host: "{{ postgres_host  }}"
+        login_user: "{{ postgres_login_user  }}"
+        login_password: "{{ postgres_login_password  }}"
+        port: "{{ postgres_port  }}"
+        name: "{{ postgres_admin_user }}"
         password: "{{ postgres_admin_password }}"
-        login_host: "{{ postgres_host }}"
-        port: "{{ postgres_port }}"
-        login_user: "{{ postgres_superuser_name }}"
-        login_password: "{{ postgres_superuser_password }}"
+        role_attr_flags: "CREATEDB"
 
     - name: Create database
       community.postgresql.postgresql_db:
-        name: "{{ postgres_database_name }}"
-        owner: "{{ postgres_admin_name }}"
+        login_host: "{{ postgres_host  }}"
+        login_user: "{{ postgres_admin_user  }}"
+        login_password: "{{ postgres_admin_password  }}"
+        port: "{{ postgres_port  }}"
+        name: "{{ postgres_schedule_database_name }}"
+        owner: "{{ postgres_admin_user }}"
         state: present
-        login_host: "{{ postgres_host }}"
-        port: "{{ postgres_port }}"
-        login_user: "{{ postgres_superuser_name }}"
-        login_password: "{{ postgres_superuser_password }}"
-
-    - name: Restore intial dump for staging
-      block:
-        - name: Copy initial database dump
-          ansible.builtin.copy:
-            src: "{{ postgres_initial_data_src }}"
-            dest: "{{ postgres_initial_data_dest }}"
-            owner: "{{ docker_files_owner }}"
-            group: "{{ docker_group }}"
-            mode: "{{ docker_files_mode }}"
-
-        - name: Restore database from initial dump
-          community.postgresql.postgresql_db:
-            name: "{{ postgres_database_name }}"
-            state: restore
-            target: "{{ postgres_initial_data_dest }}"
-            owner: "{{ postgres_admin_name }}"
-            login_host: "{{ postgres_host }}"
-            port: "{{ postgres_port }}"
-            login_user: "{{ postgres_admin_name }}"
-            login_password: "{{ postgres_admin_password }}"
-      when: labels.env == "stage"
+        
+    - name: Restore dump from stage and dev envirnoment
+      community.postgresql.postgresql_db:        
+        login_host: "{{ postgres_host  }}"
+        login_user: "{{ postgres_admin_user  }}"
+        login_password: "{{ postgres_admin_password  }}"
+        name: "{{ postgres_schedule_database_name }}"
+        state: restore
+        target: "{{ postgres_initial_data_dest }}"
+      when: postgres_restore_dump
       

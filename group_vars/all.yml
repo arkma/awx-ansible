@@ -1,27 +1,15 @@
 ---
-# Node exporter
-node_exporter_image: "prom/node-exporter:v1.3.1"
-node_exporter_container_name: node-exporter
-node_exporter_port: 18216
-
-# Redis
-redis_port: 60210
-
 # Postgres
-postgres_port: 46184
+postgres_host: "YOUR_POSTGRES_HOST"
+postgres_login_user: "YOUR_POSTGRES_USER"
+postgres_login_password: "YOUR_POSTGRES_PASSWORD"
+postgres_port: 5432
 
-# Mongo
-mongo_port: 14587
 
-# Docker
-docker_dir: /opt/docker
-docker_dir_mode: '0755'
-docker_users:
-      - docker_user
-docker_files_owner: docker_user
-docker_files_mode: '0755'
-docker_group: docker
+postgres_admin_user: "YOUR_ADMIN_USER"
+postgres_admin_password: "YOUR_ADMIN_PASSWORD"
 
-# Ansible
-ansible_ssh_user: sa_101994008222971342723
-ansible_port: 22
+postgres_schedule_database_name: schedule
+
+postgres_restore_dump: true
+postgres_initial_data_dest: "./files/initial_data.sql"

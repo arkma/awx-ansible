@@ -1,6 +1,6 @@
 ---
 - name: Install MongoDB on GCP Instance ansible-mongo
-  hosts: ansible-mongo
+  hosts: service_mongodb
   become: yes
   vars:
     mongo_config_owner: "mongodb"

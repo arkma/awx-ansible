@@ -1,6 +1,6 @@
 ---
 - name: Install Grafana and Prometheus on GCP ansible-grafana
-  hosts: ansible-grafana
+  hosts: service_grafana
   become: yes
   vars:
     prometheus_config_owner: "root"

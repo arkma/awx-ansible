@@ -1,0 +1,59 @@
+---
+- name: Install MongoDB on GCP Instance ansible-mongo
+  hosts: ansible-mongo
+  become: yes
+  vars:
+    mongo_config_owner: "mongodb"
+    mongo_config_group: "mongodb"
+
+  tasks:
+    - name: Install gnupg and curl
+      apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - gnupg
+        - curl
+
+    - name: Check if MongoDB GPG key and dearmor exists
+      ansible.builtin.stat:
+        path: "{{ mongo_user_keyrings_dir }}-{{ mongo_version }}.gpg"
+      register: key_file_stat
+
+    - name: Download MongoDB GPG key and dearmor
+      shell: "curl -fsSL {{ mongo_pgp_url }}-{{ mongo_version }}.asc | sudo gpg -o {{ mongo_user_keyrings_dir }}-{{ mongo_version }}.gpg --dearmor"
+      when: key_file_stat.stat.exists == False
+
+    - name: Add MongoDB APT repository line
+      lineinfile:
+        path: /etc/apt/sources.list.d/mongodb-org-{{ mongo_version }}.list
+        line: "deb [ arch=amd64,arm64 signed-by={{ mongo_user_keyrings_dir }}-{{ mongo_version }}.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/{{ mongo_version }} multiverse"
+        create: yes
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install MongoDB
+      apt:
+        name: mongodb-org
+        state: present
+
+    - name: Create MongoDB data directory
+      file:
+        path: "{{ mongo_data_dir }}"
+        state: directory
+        owner: "{{ mongo_config_owner }}"
+        group: "{{ mongo_config_group }}"
+        mode: 0755
+
+    - name: Install MongoDB tools
+      apt:
+        name: mongodb-database-tools
+        state: present
+
+    - name: Start MongoDB service
+      service:
+        name: mongod
+        state: started
+        enabled: yes

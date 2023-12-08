@@ -1,0 +1,6 @@
+---
+- name: Include the grafana playbook
+  ansible.builtin.import_playbook: grafana.yml
+
+- name: Include the mongo playbook
+  ansible.builtin.import_playbook: mongo.yml

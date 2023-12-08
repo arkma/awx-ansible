@@ -1,0 +1,24 @@
+plugin: google.cloud.gcp_compute
+zones:  # Populate inventory with instances in these regions
+  - us-central1-a
+projects:
+  - softseve-blue-team
+filters:
+  - status = RUNNING
+  # - scheduling.automaticRestart = true AND status = RUNNING
+service_account_file: ./keys/softseve-blue-team.json
+auth_kind: serviceaccount
+scopes:
+  - 'https://www.googleapis.com/auth/cloud-platform'
+  - 'https://www.googleapis.com/auth/compute.readonly'
+keyed_groups:
+  # Create groups from GCE labels
+  - prefix: gcp
+    key: labels
+hostnames:
+  # List hosts by name instead of the default public IP
+  - name
+compose:
+  # Set an inventory parameter to use the Public IP address to connect to the host
+  # For Private IP, use "networkInterfaces[0].networkIP"
+  ansible_host: networkInterfaces[0].accessConfigs[0].natIP

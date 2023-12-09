@@ -1,0 +1,53 @@
+---
+- name: Install Nexus on GCP VM
+  hosts: your_gcp_vm_group
+  become: yes
+  tasks:
+    - name: Update all packages
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install Java (OpenJDK 8)
+      apt:
+        name: openjdk-8-jre-headless
+        state: present
+
+    - name: Download Nexus
+      get_url:
+        url: "https://download.sonatype.com/nexus/3/nexus-3.63.0-01-unix.tar.gz"
+        dest: "/tmp/nexus-3.63.0-01.tar.gz"
+
+    - name: Extract Nexus tarball
+      unarchive:
+        src: "/tmp/nexus-3.63.0-01.tar.gz"
+        dest: "/opt"
+        remote_src: yes
+
+    - name: Rename Nexus directory
+      command: mv /opt/nexus-3.63.0-01 /opt/nexus
+
+    - name: Add Nexus as a service
+      copy:
+        dest: "/etc/systemd/system/nexus.service"
+        content: |
+          [Unit]
+          Description=nexus service
+          After=network.target
+
+          [Service]
+          Type=forking
+          ExecStart=/opt/nexus/bin/nexus start
+          ExecStop=/opt/nexus/bin/nexus stop
+          User=root
+          Restart=on-abort
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Enable and start Nexus service
+      systemd:
+        name: nexus
+        enabled: yes
+        state: started
+

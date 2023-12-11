@@ -1,0 +1,6 @@
+# Mongo variables
+mongo_port: 14587
+mongo_version: 7.0
+mongo_data_dir: "/data/db"
+mongo_user_keyrings_dir: "/usr/share/keyrings/mongodb-server"
+mongo_pgp_url: "https://www.mongodb.org/static/pgp/server"

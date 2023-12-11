@@ -1,0 +1,74 @@
+---
+- name: Install Grafana and Prometheus on GCP ansible-grafana
+  hosts: service_grafana
+  become: yes
+  vars:
+    prometheus_config_owner: "root"
+    prometheus_config_group: "root"
+    
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Add Grafana APT repository GPG key
+      apt_key:
+        url: "{{ grafana_apt_repository_gpg_key }}"
+        state: present
+        
+    - name: Add Grafana APT repository
+      apt_repository:
+        repo: "{{ grafana_apt_repository }}"
+        state: present
+
+    - name: Install Prometheus and Grafana
+      apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - prometheus
+        - grafana
+
+    - name: Add prometheus directory
+      file: 
+        path: "{{ prometheus_config_dir }}"
+        state: directory
+        owner: "{{ prometheus_config_owner }}"
+        group: "{{ prometheus_config_group }}"
+        mode: 0755
+
+    - name: Add prometheus config files with all addresses
+      template:
+        src: "{{ prometheus_config_template }}"
+        dest: "{{ prometheus_config_dir }}/prometheus.yml"
+        owner: "{{ prometheus_config_owner }}"
+        group: "{{ prometheus_config_group }}"
+        mode: 0644
+  
+    - name: Start Prometheus service
+      service:
+        name: prometheus
+        state: started
+        enabled: yes
+
+    - name: Start Grafana service
+      service:
+        name: grafana-server
+        state: started
+        enabled: yes
+
+    - name: Configure grafana dashboards
+      community.grafana.grafana_dashboard:
+        dashboard_url: "{{ item.url }}"
+        grafana_url: "{{ grafana_url }}"
+      loop: "{{ grafana_dashboards }}"
+
+    - name: Configure grafana datasources
+      community.grafana.grafana_datasource:
+        name: "{{ item.name }}"
+        ds_type: "{{ item.type }}"
+        ds_url: "{{ item.url }}"
+        access: proxy
+        tls_skip_verify: true
+        grafana_url: "{{ grafana_url }}"
+      loop: "{{ grafana_datasources }}"

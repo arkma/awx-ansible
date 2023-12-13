@@ -21,13 +21,13 @@
       register: key_file_stat
 
     - name: Download MongoDB GPG key and dearmor
-      shell: "curl -fsSL {{ mongo_pgp_url }}-{{ mongo_version }}.asc | sudo gpg -o {{ mongo_user_keyrings_dir }}-{{ mongo_version }}.gpg --dearmor"
+      shell: "{{ mongo_gpg_install }}"
       when: key_file_stat.stat.exists == False
 
     - name: Add MongoDB APT repository line
       lineinfile:
         path: /etc/apt/sources.list.d/mongodb-org-{{ mongo_version }}.list
-        line: "deb [ arch=amd64,arm64 signed-by={{ mongo_user_keyrings_dir }}-{{ mongo_version }}.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/{{ mongo_version }} multiverse"
+        line:  "{{ mongo_repository }}"
         create: yes
 
     - name: Update apt cache
@@ -57,3 +57,4 @@
         name: mongod
         state: started
         enabled: yes
+        

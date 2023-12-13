@@ -1,0 +1,12 @@
+---
+- name: Include the mongo playbook
+  ansible.builtin.import_playbook: mongo.yml
+
+- name: Include the postgres playbook
+  ansible.builtin.import_playbook: postgres.yml
+
+- name: Include the kubernetes playbook
+  ansible.builtin.import_playbook: kubernetes.yml
+
+- name: Include the grafana playbook
+  ansible.builtin.import_playbook: grafana.yml

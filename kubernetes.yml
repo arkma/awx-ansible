@@ -1,33 +1,7 @@
 ---
 - name: Configure kubernetes cluster
   hosts: localhost
-  vars:
-    # GCP configuration
-    gcp_sa_env: GCP_SERVICE_ACCOUNT_FILE
-    gcp_project_env: GCP_PROJECT
-    cluster_name: stage-schedule
-    cluster_zone: us-central1-b
-    
-    # External secrets (es) variables
-    es_repo_url: "https://charts.external-secrets.io"
-    es_repo_name: external-secrets
-    es_chart_name: external-secrets
-    es_namespace: external-secrets
-    es_release_name: external-secrets
-    es_overwrite_values:
-      - value: installCRDs=true
-   
-   # Application
-    schedule_app_repo: "https://github.com/BlueTeam2/class-schedule-k8s.git"
-    schedule_app_clone_dir: /tmp/helm_class_schedule
-    schedule_app_namespace: schedule-app
-    schedule_app_backend_name: backend
-    schedule_app_frontend_name: frontend
-    schedule_app_backend_overwrite_values:
-      - value: environmentType=stage
-
-
-
+  gather_facts: false
   tasks:
     - name: Generate kubeconfig to use kubeclt
       ansible.builtin.shell: 

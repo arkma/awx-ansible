@@ -1,7 +1,9 @@
 plugin: google.cloud.gcp_compute
 projects:
   - softseve-blue-team
-service_account_file: ./keys/softseve-blue-team.json
+filters:
+  - status = RUNNING
+service_account_file: PWD_TO_SA_PRIVATE_KEY
 auth_kind: serviceaccount
 keyed_groups:
   - key: labels.env

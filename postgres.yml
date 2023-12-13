@@ -1,21 +1,11 @@
 ---
 - name: Postgres server
   hosts: localhost
-  vars:
-    gcp_project: "YOUR_PROJECT_ID"
-
-    postgres_port: 5432
-    postgres_admin_user: "YOUR_ADMIN_USER"
-    postgres_admin_password: "YOUR_ADMIN_PASSWORD"
-    postgres_schedule_database_name: schedule
-    postgres_restore_dump: true
-    postgres_initial_data_dest: "./files/initial_data.sql"
-    postgre_admin_roles: "CREATEDB"
-
+  gather_facts: false
   tasks:
     - name: get info on an instance
       gcp_sql_instance_info:
-        project: "{{ gcp_project }}"
+        project: "{{ lookup('ansible.builtin.env', gcp_project_env)  }}"
         auth_kind: serviceaccount
       register: sql_instances
 
@@ -28,7 +18,7 @@
             selectattr('settings.userLabels.app', 'equalto', 'schedule')
           }}
         
-    - name: Extract instace ip
+    - name: Extract instace ip and name
       ansible.builtin.set_fact:
         postgres_host: >-
           {{ 
@@ -39,11 +29,9 @@
             map(attribute='ipAddress') |
             first
           }}
-        postgres_instace: >-
+        postgres_instace_name: >-
           {{ 
-            sql_instances.resources |
-            selectattr('settings.userLabels.app', 'defined') |
-            selectattr('settings.userLabels.app', 'equalto', 'schedule') |
+            postgres_instance |
             map(attribute='name') |
             first |
             trim
@@ -52,11 +40,11 @@
     - name: Create admin user
       google.cloud.gcp_sql_user:
         instance:
-          name: "{{ postgres_instace }}"
+          name: "{{ postgres_instace_name }}"
         host: "" # This has to be empty for PostgresSQL. See https://github.com/ansible-collections/google.cloud/issues/514 
         name: "{{ postgres_admin_user }}"
         password: "{{ postgres_admin_password }}"
-        project: "{{ gcp_project }}"
+        project: "{{ lookup('ansible.builtin.env', gcp_project_env)  }}"
         auth_kind: serviceaccount
         state: present
       no_log: true # Ensure not to log password
@@ -80,4 +68,3 @@
         state: restore
         target: "{{ postgres_initial_data_dest }}"
       when: postgres_restore_dump
-      

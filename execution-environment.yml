@@ -1,0 +1,85 @@
+---
+version: 3
+images:
+  base_image:
+    name: quay.io/centos/centos:stream9
+dependencies:
+  ansible_core:
+    # Require minimum of 2.15 to get ansible-inventory --limit option
+    package_pip: ansible-core>=2.15.0rc2,<2.16
+  ansible_runner:
+    package_pip: ansible-runner
+  galaxy: |
+    ---
+    collections:
+      - name: awx.awx
+      - name: theforeman.foreman
+      - name: google.cloud
+      - name: ovirt.ovirt
+      - name: kubernetes.core
+      - name: ansible.posix
+      - name: redhatinsights.insights
+      - name: ansible.utils
+      - name: community.postgresql
+      - name: community.grafana
+      - name: community.docker
+  system: |
+    git-core [platform:rpm]
+    python3.9-devel [platform:rpm compile]
+    libcurl-devel [platform:rpm compile]
+    krb5-devel [platform:rpm compile]
+    krb5-workstation [platform:rpm]
+    subversion [platform:rpm]
+    subversion [platform:dpkg]
+    git-lfs [platform:rpm]
+    sshpass [platform:rpm]
+    rsync [platform:rpm]
+    epel-release [platform:rpm]
+    python-unversioned-command [platform:rpm]
+    unzip [platform:rpm]
+  python: |
+    git+https://github.com/ansible/ansible-sign
+    ncclient
+    paramiko
+    pykerberos
+    pyOpenSSL
+    pypsrp[kerberos,credssp]
+    pywinrm[kerberos,credssp]
+    toml
+    pexpect>=4.5
+    python-daemon
+    pyyaml
+    six
+    google-auth
+    requests
+    psycopg2-binary
+additional_build_steps:
+  append_base:
+    - RUN $PYCMD -m pip install -U pip
+  append_final:
+    - COPY --from=quay.io/ansible/receptor:devel /usr/bin/receptor /usr/bin/receptor
+    - RUN mkdir -p /var/run/receptor
+    - RUN git lfs install --system
+
+    # - RUN curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl" && chmod +x ./kubectl && mv ./kubectl /usr/local/bin/kubectl && curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 && chmod +x get_helm.sh && ./get_helm.sh
+    - |
+      RUN curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl" && \
+        chmod +x ./kubectl && \ 
+        mv ./kubectl /usr/local/bin/kubectl && \
+        curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 && \
+        chmod +x get_helm.sh && \
+        ./get_helm.sh
+
+    # - RUN apk add curl openssl bash --no-cache
+    - |
+      RUN echo "[google-cloud-cli]" > /etc/yum.repos.d/google-cloud-sdk.repo && \
+        echo "name=Google Cloud CLI" >> /etc/yum.repos.d/google-cloud-sdk.repo && \
+        echo "baseurl=https://packages.cloud.google.com/yum/repos/cloud-sdk-el9-x86_64" >> /etc/yum.repos.d/google-cloud-sdk.repo && \
+        echo "enabled=1" >> /etc/yum.repos.d/google-cloud-sdk.repo && \
+        echo "gpgcheck=1" >> /etc/yum.repos.d/google-cloud-sdk.repo && \
+        echo "repo_gpgcheck=0" >> /etc/yum.repos.d/google-cloud-sdk.repo && \
+        echo "gpgkey=https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg" >> /etc/yum.repos.d/google-cloud-sdk.repo
+
+    - RUN yum install -y google-cloud-cli
+    - RUN yum install -y google-cloud-cli-gke-gcloud-auth-plugin
+  

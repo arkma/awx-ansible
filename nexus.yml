@@ -1,46 +1,10 @@
 ---
 - name: Nexus
-  hosts: your_gcp_vm_group
+  hosts: service_nexus
   become: yes
-  tasks:
-    - name: Install Nginx
-      apt:
-        name: nginx
-        state: present
-  vars:
-
-    nexus_upgrade: true
-    nexus_default_admin_password: admin123
-    nexus_admin_password: changeme
-    nexus_timezone: UTC 
-    nexus_delete_default_repos: true
-    nexus_anonymous_access: true
-    httpd_setup_enable: false
-    nexus_docker_bearer_token_realm: true
-    httpd_setup_enable: false
-    nexus_public_sheme: https
-    nexus_public_hostname: 'nexus.vm'
-    httpd_server_name: "{{ nexus_public_hostname }}"
-    httpd_default_admin_email: "admin@example.com"
-    httpd_ssl_certificate_file: 'files/nexus.vm.crt'
-    httpd_ssl_certificate_key_file: 'files/nexus.vm.key'
-    # httpd_ssl_certificate_chain_file: "{{ httpd_ssl_certificate_file }}"
-    httpd_copy_ssl_files: false
-    nexus_local_users:
-      - username: jenkins # used as key to update
-        first_name: Jenkins
-        last_name: CI
-        email: support@company.com
-        password: "s3cr3t"
-        roles:
-          - Developpers # role ID here
-    nexus_blobstores:
-      - name: docker-images
-        path: /var/nexus/blobs/company-artifacts
-    nexus_repos_docker_hosted:     
-      - name: blue-docker-repo
-        blob_store: docker-images
 
   roles:
-    - { role: geerlingguy.java, java_packages: openjdk-8-jre-headless}
+    - { role: geerlingguy.certbot }
+    - { role: geerlingguy.apache, apache_create_vhosts: no, apache_mods_enabled: ["proxy", "proxy_http", "headers", "ssl", "rewrite"], apache_remove_default_vhost: true, tags: ['geerlingguy.apache'] }
+    - { role: geerlingguy.java, java_packages: openjdk-8-jre-headless }
     - { role: ansible-thoteam.nexus3-oss, tags: ['ansible-thoteam.nexus3-oss'] }

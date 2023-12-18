@@ -53,6 +53,7 @@ dependencies:
     google-auth
     requests
     psycopg2-binary
+    jmespath
 additional_build_steps:
   append_base:
     - RUN $PYCMD -m pip install -U pip
@@ -79,6 +80,9 @@ additional_build_steps:
         echo "gpgcheck=1" >> /etc/yum.repos.d/google-cloud-sdk.repo && \
         echo "repo_gpgcheck=0" >> /etc/yum.repos.d/google-cloud-sdk.repo && \
         echo "gpgkey=https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg" >> /etc/yum.repos.d/google-cloud-sdk.repo
+
+    - RUN ansible-galaxy role install geerlingguy.apache
+    - RUN ansible-galaxy role install geerlingguy.java
 
     - RUN yum install -y google-cloud-cli
     - RUN yum install -y google-cloud-cli-gke-gcloud-auth-plugin

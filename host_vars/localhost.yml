@@ -14,20 +14,76 @@ es_release_name: external-secrets
 es_overwrite_values:
   - value: installCRDs=true
 
+
+# Git
+k8s_repo: "https://github.com/BlueTeam2/class-schedule-k8s.git"
+k8s_clone_repo: /tmp/k8s_class_schedule_chart
+k8s_backend_chart: "{{ k8s_clone_repo }}/backend"
+k8s_frontend_chart: "{{ k8s_clone_repo }}/frontend"
+k8s_consul_gateway_chart: "{{ k8s_clone_repo }}/consul/consul-gateway"
+k8s_consul_gateway_reference_grant_chart: "{{ k8s_clone_repo }}/consul/consul-gateway-reference-grant"
+k8s_datadog_chart_values: "{{ k8s_clone_repo }}/monitoring/datadog-values.yaml"
+k8s_consul_chart_values: "{{ k8s_clone_repo }}/consul/values.yaml"
+
+
 # Application
-schedule_app_repo: "https://github.com/BlueTeam2/class-schedule-k8s.git"
-schedule_app_clone_dir: /tmp/helm_class_schedule
 schedule_app_namespace: schedule-app
 schedule_app_backend_name: backend
 schedule_app_frontend_name: frontend
 schedule_app_backend_overwrite_values:
   - value: environmentType=stage
 
+## Patch redis headless service. There is no way to set it in helm chart values
+schedule_app_redis_name: backend-redis-headless
+schedule_app_redis_patch_definition:
+  metadata:
+    labels:
+      consul.hashicorp.com/service-ignore: 'true'
+
+
+
+# Consul
+hashicorp_repo_url: "https://helm.releases.hashicorp.com"
+hashicorp_repo_name: hashicorp
+consul_chart_name: consul
+consul_release_name: consul
+consul_namespace: consul
+consul_overwrite_values:
+  - value: "{{ k8s_consul_chart_values }}"
+    value_type: file 
+
+
+# Frontend gateway
+gateway_release_name: "consul-frontend-gateway"
+gateway_release_namespace: "{{ consul_release_name }}"
+
+
+# Frontend gateway referencegrant
+gateway_rg_release_name: "consul-frontend-gateway"
+gateway_rg_release_namespace: "{{ schedule_app_namespace}}"
+
+# Datadog
+datadog_secret_name: "datadog-secret"
+datadog_secret_api_key: "3b1eadce52ab9ab16f692bf8b7fbe616"
+
+datadog_repo_url: "https://helm.datadoghq.com"
+datadog_repo_name: datadog
+datadog_chart_name: datadog
+datadog_release_name: datadog
+datadog_namespace: monitoring
+datadog_overwrite_values:
+  - value: "{{ k8s_datadog_chart_values }}"
+    value_type: file 
+
+
+
 
 # Postgres configuration
 postgres_port: 5432
-postgres_admin_user: "YOUR_ADMIN_USER"
-postgres_admin_password: "YOUR_ADMIN_PASSWORD"
+# postgres_admin_user: "YOUR_ADMIN_USER"
+# postgres_admin_password: "YOUR_ADMIN_PASSWORD"
+postgres_admin_user: "schedule_admin"
+postgres_admin_password: "9h4m03JQURp7"
 postgres_schedule_database_name: schedule
 postgres_restore_dump: true
 postgres_initial_data_dest: "./files/initial_data.sql"

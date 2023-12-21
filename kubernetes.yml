@@ -45,6 +45,13 @@
         release_name: "{{ es_release_name }}"
         set_values: "{{ es_overwrite_values }}"
 
+    - name: Wait until external-secrets is running
+      kubernetes.core.k8s:
+        kind: "{{ es_is_ready.service_kind }}"
+        namespace: "{{ es_namespace }}"
+        name: "{{ es_is_ready.service_name }}"
+        wait: true
+        wait_condition: "{{ es_is_ready.wait_condition }}"
 
     - name: Add datadog repository
       kubernetes.core.helm_repository:

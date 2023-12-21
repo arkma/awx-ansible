@@ -14,6 +14,13 @@ es_release_name: external-secrets
 es_overwrite_values:
   - value: installCRDs=true
 
+es_is_ready:
+  service_kind: Deployment
+  service_name: "{{ es_release_name }}-webhook"
+  wait_condition: 
+    reason: MinimumReplicasAvailable
+    type: Available
+
 
 # Git
 k8s_repo: "https://github.com/BlueTeam2/class-schedule-k8s.git"
@@ -33,7 +40,7 @@ schedule_app_frontend_name: frontend
 schedule_app_backend_overwrite_values:
   - value: environmentType=stage
 
-## Patch redis headless service. There is no way to set it in helm chart values
+# Patch redis headless service. There is no way to set it in helm chart values
 schedule_app_redis_name: backend-redis-headless
 schedule_app_redis_patch_definition:
   metadata:
@@ -64,7 +71,7 @@ gateway_rg_release_namespace: "{{ schedule_app_namespace}}"
 
 # Datadog
 datadog_secret_name: "datadog-secret"
-datadog_secret_api_key: "3b1eadce52ab9ab16f692bf8b7fbe616"
+datadog_secret_api_key: "YOUR_DATADOG_API_KEY"
 
 datadog_repo_url: "https://helm.datadoghq.com"
 datadog_repo_name: datadog
@@ -80,10 +87,8 @@ datadog_overwrite_values:
 
 # Postgres configuration
 postgres_port: 5432
-# postgres_admin_user: "YOUR_ADMIN_USER"
-# postgres_admin_password: "YOUR_ADMIN_PASSWORD"
-postgres_admin_user: "schedule_admin"
-postgres_admin_password: "9h4m03JQURp7"
+postgres_admin_user: "YOUR_ADMIN_USER"
+postgres_admin_password: "YOUR_ADMIN_PASSWORD"
 postgres_schedule_database_name: schedule
 postgres_restore_dump: true
 postgres_initial_data_dest: "./files/initial_data.sql"

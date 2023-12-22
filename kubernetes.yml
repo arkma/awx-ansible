@@ -3,7 +3,7 @@
   hosts: localhost
   gather_facts: false
   tasks:
-    - name: Generate kubeconfig to use kubeclt
+    - name: Activate service account
       ansible.builtin.shell: 
         cmd: |
           gcloud auth activate-service-account --key-file="${{ gcp_sa_env }}" --project "${{ gcp_project_env }}"
@@ -13,6 +13,24 @@
         cmd: |
           gcloud container clusters get-credentials "{{ cluster_name }}" --zone "{{ cluster_zone }}" --project "${{ gcp_project_env }}"
 
+    - name: Git clone k8s chart reporitory
+      ansible.builtin.git:
+        repo: "{{ k8s_repo }}"
+        dest: "{{ k8s_clone_repo }}"
+
+    - name: Add hashicorp repository
+      kubernetes.core.helm_repository:
+        repo_name: "{{ hashicorp_repo_name }}"
+        repo_url: "{{ hashicorp_repo_url }}"
+
+    - name: Deploy consul chart
+      kubernetes.core.helm:
+        chart_ref: "{{ hashicorp_repo_name }}/{{ consul_chart_name }}"
+        create_namespace: true
+        release_namespace: "{{ consul_namespace }}"
+        release_name: "{{ consul_release_name }}"
+        values_files:
+          - "{{ k8s_consul_chart_values }}"
 
     - name: Add external-secrets repository
       kubernetes.core.helm_repository:
@@ -27,23 +45,77 @@
         release_name: "{{ es_release_name }}"
         set_values: "{{ es_overwrite_values }}"
 
-    - name: Git clone stable repo on HEAD
-      ansible.builtin.git:
-        repo: "{{ schedule_app_repo }}"
-        dest: "{{ schedule_app_clone_dir }}"
+    - name: Wait until external-secrets is running
+      kubernetes.core.k8s:
+        kind: "{{ es_is_ready.service_kind }}"
+        namespace: "{{ es_namespace }}"
+        name: "{{ es_is_ready.service_name }}"
+        wait: true
+        wait_condition: "{{ es_is_ready.wait_condition }}"
+
+    - name: Add datadog repository
+      kubernetes.core.helm_repository:
+        repo_name: "{{ datadog_repo_name }}"
+        repo_url: "{{ datadog_repo_url }}"
+
+    - name: Add monitoring namespace
+      kubernetes.core.k8s:
+        state: present
+        definition: "{{ lookup('ansible.builtin.template', 'templates/monitoring_namespace.yaml.j2') | from_yaml }}"
+        validate:
+          fail_on_error: yes
+
+    - name: Add datadog sercret with api key
+      kubernetes.core.k8s:
+        state: present
+        namespace: "{{ datadog_namespace }}"
+        definition: "{{ lookup('ansible.builtin.template', 'templates/datadog_secret.yaml.j2') | from_yaml }}"
+        validate:
+          fail_on_error: yes
+
+    - name: Deploy datadog monitoring
+      kubernetes.core.helm:
+        chart_ref: "{{ datadog_repo_name }}/{{ datadog_chart_name }}"
+        create_namespace: true
+        release_namespace: "{{ datadog_namespace }}"
+        release_name: "{{ datadog_release_name }}"
+        values_files:
+          - "{{ k8s_datadog_chart_values }}"
 
     - name: Deploy backend
       kubernetes.core.helm:
         release_name: "{{ schedule_app_backend_name }}"
-        chart_ref: "{{ schedule_app_clone_dir }}/{{ schedule_app_backend_name }}"
+        chart_ref: "{{ k8s_backend_chart }}"
         release_namespace: "{{ schedule_app_namespace }}"
         create_namespace: true
         dependency_update: true
         set_values: "{{ schedule_app_backend_overwrite_values }}"
 
+    - name: Patch redis headless service
+      kubernetes.core.k8s:
+        state: patched
+        kind: service
+        namespace: "{{ schedule_app_namespace }}"
+        name: "{{ schedule_app_redis_name }}"
+        definition: "{{ schedule_app_redis_patch_definition }}"
+
     - name: Deploy frontend
       kubernetes.core.helm:
         release_name: "{{ schedule_app_frontend_name }}"
-        chart_ref: "{{ schedule_app_clone_dir }}/{{ schedule_app_frontend_name }}"
+        chart_ref: "{{ k8s_frontend_chart }}"
         release_namespace: "{{ schedule_app_namespace }}"
         create_namespace: true
+
+    - name: Deploy frontend gateway
+      kubernetes.core.helm:
+        release_name: "{{ gateway_release_name }}"
+        chart_ref: "{{ k8s_consul_gateway_chart }}"
+        release_namespace: "{{ gateway_release_namespace }}"
+        create_namespace: false
+
+    - name: Deploy frontend referencegrant
+      kubernetes.core.helm:
+        release_name: "{{ gateway_rg_release_name }}"
+        chart_ref: "{{ k8s_consul_gateway_reference_grant_chart }}"
+        release_namespace: "{{ gateway_rg_release_namespace }}"
+        create_namespace: false

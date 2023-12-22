@@ -32,6 +32,12 @@ k8s_consul_gateway_reference_grant_chart: "{{ k8s_clone_repo }}/consul/consul-ga
 k8s_datadog_chart_values: "{{ k8s_clone_repo }}/monitoring/datadog-values.yaml"
 k8s_consul_chart_values: "{{ k8s_clone_repo }}/consul/values.yaml"
 
+# Hashicorp vault
+hashicorp_vault_server_ip: "YOUR_HASHICORP_VAULT_SERVER_IP"
+hashicorp_vault_server_port: 8200
+hashicorp_vault_server: "http://{{ hashicorp_vault_server_ip }}:{{ hashicorp_vault_server_port }}/"
+hashicorp_vault_root_token: "YOUR_HASHICORP_VAULT_ROOT_TOKEN"
+
 
 # Application
 schedule_app_namespace: schedule-app
@@ -39,6 +45,8 @@ schedule_app_backend_name: backend
 schedule_app_frontend_name: frontend
 schedule_app_backend_overwrite_values:
   - value: environmentType=stage
+  - value: 'secretStore.vaultProvider.server={{ hashicorp_vault_server | quote }}'
+  - value: 'secretStore.vaultProvider.secretToken.token={{ hashicorp_vault_root_token }}'
 
 # Patch redis headless service. There is no way to set it in helm chart values
 schedule_app_redis_name: backend-redis-headless

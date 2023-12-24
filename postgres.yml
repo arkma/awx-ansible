@@ -1,99 +1,70 @@
 ---
 - name: Postgres server
-  hosts: service_postgres
-  become: yes
+  hosts: localhost
+  gather_facts: false
   tasks:
-    - name: Install required packages for postgres module
-      apt:
-        name: "{{ postgres_required_packages }}"
-        state: present
-    
-    - name: Create docker directory
-      file:
-        path: "{{ docker_dir }}"
-        state: directory
-        owner: "{{ docker_files_owner }}"
-        group: "{{ docker_group }}"
-        mode: "{{ docker_dir_mode }}"
-    
-    - name: Create postgres data directory
-      file:
-        path: "{{ postgres_files_dir }}"
-        state: directory
-        owner: "{{ docker_files_owner }}"
-        group: "{{ docker_group }}"
-        mode: "{{ docker_dir_mode }}"
+    - name: get info on an instance
+      gcp_sql_instance_info:
+        project: "{{ lookup('ansible.builtin.env', gcp_project_env)  }}"
+        auth_kind: serviceaccount
+      register: sql_instances
 
-    - name: Create .env from template
-      ansible.builtin.template:
-        src: "{{ postgres_template_env_src }}"
-        dest: "{{ postgres_env_dest }}"
-        owner: "{{ docker_files_owner }}"
-        group: "{{ docker_group }}"
-        mode: "{{ docker_files_mode }}"
-
-    - name: Run postgres container
-      community.docker.docker_container:
-        name: "{{ postgres_container_name }}"
-        image: "{{ postgres_image }}"
-        state: started
-        restart_policy: always
-        published_ports:
-          - "{{ postgres_port }}:5432"
-        env_file: "{{ postgres_env_dest }}"
-        mounts:
-          - source: postgres_volume
-            target: /var/lib/postgresql/data
-        healthcheck:
-          start_period: 30s
-          test: ["CMD-SHELL", "pg_isready"]
-
-    - name: Wait postgres container is running
-      community.docker.docker_container_info:
-        name: "{{ postgres_container_name }}"
-      register: postgres_container
-      until: postgres_container.container.State.Health.Status == "healthy"
-      retries: 5
-      delay: 10
+    - name: Extract specific instance
+      ansible.builtin.set_fact:
+        postgres_instance: >-
+          {{ 
+            sql_instances.resources |
+            selectattr('settings.userLabels.app', 'defined') |
+            selectattr('settings.userLabels.app', 'equalto', 'schedule')
+          }}
+        
+    - name: Extract instace ip and name
+      ansible.builtin.set_fact:
+        postgres_host: >-
+          {{ 
+            postgres_instance |
+            map(attribute='ipAddresses') |
+            flatten |
+            selectattr('type', 'equalto', 'PRIMARY') |
+            map(attribute='ipAddress') |
+            first
+          }}
+        postgres_instace_name: >-
+          {{ 
+            postgres_instance |
+            map(attribute='name') |
+            first |
+            trim
+          }}
 
     - name: Create admin user
-      community.postgresql.postgresql_user:
-        name: "{{ postgres_admin_name }}"
+      google.cloud.gcp_sql_user:
+        instance:
+          name: "{{ postgres_instace_name }}"
+        host: "" # This has to be empty for PostgresSQL. See https://github.com/ansible-collections/google.cloud/issues/514 
+        name: "{{ postgres_admin_user }}"
         password: "{{ postgres_admin_password }}"
-        login_host: "{{ postgres_host }}"
-        port: "{{ postgres_port }}"
-        login_user: "{{ postgres_superuser_name }}"
-        login_password: "{{ postgres_superuser_password }}"
+        project: "{{ lookup('ansible.builtin.env', gcp_project_env)  }}"
+        auth_kind: serviceaccount
+        state: present
+      no_log: true # Ensure not to log password
 
     - name: Create database
       community.postgresql.postgresql_db:
-        name: "{{ postgres_database_name }}"
-        owner: "{{ postgres_admin_name }}"
+        login_host: "{{ postgres_host  }}"
+        login_user: "{{ postgres_admin_user  }}"
+        login_password: "{{ postgres_admin_password  }}"
+        port: "{{ postgres_port  }}"
+        name: "{{ postgres_schedule_database_name }}"
+        owner: "{{ postgres_admin_user }}"
         state: present
-        login_host: "{{ postgres_host }}"
-        port: "{{ postgres_port }}"
-        login_user: "{{ postgres_superuser_name }}"
-        login_password: "{{ postgres_superuser_password }}"
-
-    - name: Restore intial dump for staging
-      block:
-        - name: Copy initial database dump
-          ansible.builtin.copy:
-            src: "{{ postgres_initial_data_src }}"
-            dest: "{{ postgres_initial_data_dest }}"
-            owner: "{{ docker_files_owner }}"
-            group: "{{ docker_group }}"
-            mode: "{{ docker_files_mode }}"
-
-        - name: Restore database from initial dump
-          community.postgresql.postgresql_db:
-            name: "{{ postgres_database_name }}"
-            state: restore
-            target: "{{ postgres_initial_data_dest }}"
-            owner: "{{ postgres_admin_name }}"
-            login_host: "{{ postgres_host }}"
-            port: "{{ postgres_port }}"
-            login_user: "{{ postgres_admin_name }}"
-            login_password: "{{ postgres_admin_password }}"
-      when: labels.env == "stage"
-      
+        
+    - name: Restore dump for stage and dev envirnoment
+      community.postgresql.postgresql_db:        
+        login_host: "{{ postgres_host  }}"
+        login_user: "{{ postgres_admin_user  }}"
+        login_password: "{{ postgres_admin_password  }}"
+        name: "{{ postgres_schedule_database_name }}"
+        state: restore
+        target: "{{ postgres_initial_data_dest }}"
+      when: postgres_restore_dump

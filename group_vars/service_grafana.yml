@@ -1,37 +1,22 @@
-# grafana_image: grafana/grafana:8.5.3-ubuntu
-grafana_image: grafana/grafana:10.2.2-ubuntu
-prometheus_image: prom/prometheus:v2.36.0
-
-grafana_container_name: grafana
+---
+# Grafana and Prometheus variables
+prometheus_config_dir: "/etc/prometheus"
+prometheus_config_template: "./templates/prometheus_default.j2" 
+prometheus_port: 9090
 prometheus_container_name: prometheus
 
+grafana_url: "http://localhost:3000/"  
 
-grafana_port: 27875
-prometheus_port: 9090
+grafana_dashboards:
+  - name: Prometheus full node exporter
+    url: "https://grafana.com/api/dashboards/1860/revisions/33/download"
 
-grafana_url: "http://localhost:{{ grafana_port }}/"
-
-# Grafana plugin
-grafana_plugins:
-  - redis-datasource
+grafana_apt_repository_gpg_key: "https://packages.grafana.com/gpg.key"
+grafana_apt_repository: "deb https://packages.grafana.com/oss/deb stable main"
 
 # Grafana datasources
 grafana_datasources:
   - name: Prometheus
     type: prometheus
-    url: "http://{{ prometheus_container_name }}:9090/"
-  - name: Redis
-    type: redis-datasource
-    url: "redis://{{ redis_ip }}:{{ redis_port }}"
-
-# Grafana dashboards
-grafana_dashboards:
-  - name: Prometheus full node exporter
-    url: "https://grafana.com/api/dashboards/1860/revisions/33/download"
-  # - name: Redis
-  #   url: "https://grafana.com/api/dashboards/12776/revisions/2/download"
-
-
-prometheus_config_dir: "/etc/docker/prometheus"
-prometheus_config: "{{ prometheus_config_dir }}/prometheus.yml"
-prometheus_config_template: "./templates/prometheus_default.j2"
+    url: "http://{{ prometheus_container_name }}:{{ prometheus_port }}/"
+    

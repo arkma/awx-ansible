@@ -28,4 +28,3 @@ scrape_configs:
     static_configs:
       - targets: {{ groups['all'] | map('extract', hostvars, 'private_ip') | map('regex_replace', '$', ':' ~ node_exporter_port) | map('quote') | list }}
 
-

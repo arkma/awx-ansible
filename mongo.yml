@@ -1,21 +1,60 @@
-- name: Mongo server
-  hosts: service_mongo
+---
+- name: Install MongoDB on GCP Instance ansible-mongo
+  hosts: service_mongodb
   become: yes
+  vars:
+    mongo_config_owner: "mongodb"
+    mongo_config_group: "mongodb"
+
   tasks:
-    - name: Run mongo container
-      community.docker.docker_container:
-        name: "{{ mongo_container_name }}"
-        image: "{{ mongo_image }}"
+    - name: Install gnupg and curl
+      apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - gnupg
+        - curl
+
+    - name: Check if MongoDB GPG key and dearmor exists
+      ansible.builtin.stat:
+        path: "{{ mongo_user_keyrings_dir }}-{{ mongo_version }}.gpg"
+      register: key_file_stat
+
+    - name: Download MongoDB GPG key and dearmor
+      shell: "{{ mongo_gpg_install }}"
+      when: key_file_stat.stat.exists == False
+
+    - name: Add MongoDB APT repository line
+      lineinfile:
+        path: /etc/apt/sources.list.d/mongodb-org-{{ mongo_version }}.list
+        line:  "{{ mongo_repository }}"
+        create: yes
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install MongoDB
+      apt:
+        name: mongodb-org
+        state: present
+
+    - name: Create MongoDB data directory
+      file:
+        path: "{{ mongo_data_dir }}"
+        state: directory
+        owner: "{{ mongo_config_owner }}"
+        group: "{{ mongo_config_group }}"
+        mode: 0755
+
+    - name: Install MongoDB tools
+      apt:
+        name: mongodb-database-tools
+        state: present
+
+    - name: Start MongoDB service
+      service:
+        name: mongod
         state: started
-        restart_policy: always
-        published_ports:
-          - "{{ mongo_port }}:27017"
-        mounts:
-          - source: mongo
-            target: /data/db
-        env:
-          MONGO_INITDB_ROOT_USERNAME: "{{ mongo_initdb_root_username }}"
-          MONGO_INITDB_ROOT_PASSWORD: "{{ mongo_initdb_root_password }}"
-        healthcheck:
-          start_period: 10s
-          test: ["CMD", "mongosh", "--quiet", "127.0.0.1/test", "--eval", "'quit(db.runCommand({ ping: 1 }).ok ? 0 : 2)'"]
+        enabled: yes
+        

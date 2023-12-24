@@ -1,0 +1,95 @@
+# Nexus configuration
+nexus_upgrade: false
+nexus_default_admin_password: admin123
+nexus_admin_password: "YOUR_ADMIN_PASSOWRD"
+
+nexus_timezone: UTC
+nexus_delete_default_repos: true
+nexus_anonymous_access: true
+nexus_docker_bearer_token_realm: true
+
+httpd_setup_enable: true
+nexus_public_sheme: https
+httpd_server_name: "{{ nexus_public_hostname }}"
+httpd_ssl_cert_file_location: "/etc/letsencrypt/live/{{ nexus_public_hostname }}/fullchain.pem"
+httpd_ssl_cert_key_location: "/etc/letsencrypt/live/{{ nexus_public_hostname }}/privkey.pem"
+httpd_copy_ssl_files: false
+
+nexus_privileges:
+  - name: frontend-deploy
+    description: 'Deployments to frontend'
+    repository: frontend
+    actions:
+      - add
+      - edit
+
+  - name: backend-deploy
+    description: 'Deployments to backend'
+    repository: backend
+    actions:
+      - add
+      - edit
+
+  - name: all-repos-read
+    description: 'Read & Browse access to all repos'
+    repository: '*'
+    actions:
+      - read
+      - browse
+
+nexus_roles:
+  - id: Developpers # can map to a LDAP group id, also used as a key to update a role
+    name: developers
+    description: All developers
+    privileges:
+      - nx-search-read
+      - all-repos-read
+      - frontend-deploy
+      - backend-deploy
+    roles: [] # references to other role names
+
+  - id: Reader
+    name: readers
+    description: Repository readers
+    privileges:
+      - all-repos-read
+    roles: [] # references to other role names
+
+nexus_local_users:
+  - username: "{{ nexus_jenkins_user }}" # used as key to update
+    first_name: "{{ nexus_jenkins_user }}"
+    last_name: CI
+    email: support@company.com
+    password: "{{ nexus_jenkins_password }}"
+    roles:
+      - Developpers # role ID here
+  - username: "{{ nexus_kubernetes_user }}"
+    first_name: "{{ nexus_kubernetes_user }}"
+    last_name: Deploy
+    email: support@company.com
+    password: "{{ nexus_kubernetes_password }}"
+    roles:
+      - Reader # role ID here
+
+nexus_blobstores:
+  - name: docker-images
+    path: /var/nexus/blobs/company-artifacts
+nexus_repos_docker_hosted:     
+  - name: blue-docker-repo
+    blob_store: docker-images
+
+## certbot
+certbot_auto_renew: true
+certbot_auto_renew_user: "root"
+certbot_auto_renew_hour: "0"
+certbot_auto_renew_minute: "30"
+certbot_auto_renew_options: "--quiet"
+certbot_install_method: snap
+certbot_create_if_missing: true
+certbot_create_method: standalone
+certbot_create_standalone_stop_services:
+  - apache2
+certbot_certs:
+  - email: "{{ certbot_email }}"
+    domains:
+      - nexus.smaha.top

@@ -1,5 +1,0 @@
----
-# handlers file for install_docker
-- name: Update Apt cache
-  apt:
-    update_cache: yes

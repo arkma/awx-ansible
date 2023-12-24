@@ -1,6 +1,0 @@
-- name: Docker installation
-  hosts: all
-  strategy: free
-  become: yes
-  roles:
-    - install_docker

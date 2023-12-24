@@ -1,76 +1,67 @@
-- name: Grafana server
+---
+- name: Install Grafana and Prometheus on GCP ansible-grafana
   hosts: service_grafana
   become: yes
+  vars:
+    prometheus_config_owner: "root"
+    prometheus_config_group: "root"
+    
   tasks:
-    - name: Gather facts from ALL hosts (regardless of limit or tags)
-      setup:
-      delegate_to: "{{ item }}"
-      delegate_facts: True
-      when: hostvars[item]['ansible_default_ipv4'] is not defined
-      with_items: "{{ groups['all'] }}"
+    - name: Update apt cache
+      apt:
+        update_cache: yes
 
-    - name: Set required ip variables
-      set_fact:
-        redis_ip: "{{ hostvars[groups['service_redis'] | first]['private_ip'] }}"
+    - name: Add Grafana APT repository GPG key
+      apt_key:
+        url: "{{ grafana_apt_repository_gpg_key }}"
+        state: present
+        
+    - name: Add Grafana APT repository
+      apt_repository:
+        repo: "{{ grafana_apt_repository }}"
+        state: present
 
-    - name: Run grafana container
-      community.docker.docker_container:
-        name: "{{ grafana_container_name }}"
-        image: "{{ grafana_image }}"
-        state: started
-        restart_policy: always
-        published_ports:
-          - "{{ grafana_port }}:3000"
-        mounts:
-          - source: grafana_volume
-            target: /var/lib/grafana
-        env:
-          GF_INSTALL_PLUGINS: "{{ grafana_plugins | join(', ') }}"
-        healthcheck:
-          test:  ["CMD-SHELL", "grafana-cli", "plugins", "ls"]
-          # test: ["CMD-SHELL", "curl --output /dev/null --silent --fail http://127.0.0.1:3000/api/health || exit 1"]
+    - name: Install Prometheus and Grafana
+      apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - prometheus
+        - grafana
 
     - name: Add prometheus directory
-      file:
+      file: 
         path: "{{ prometheus_config_dir }}"
         state: directory
-        owner: "{{ docker_files_owner }}"
-        group: "{{ docker_group }}"
-        mode: "{{ docker_dir_mode }}"
-    
-    - name: Add prometheus config files with all adresses
-      ansible.builtin.template:
+        owner: "{{ prometheus_config_owner }}"
+        group: "{{ prometheus_config_group }}"
+        mode: 0755
+
+    - name: Add prometheus config files with all addresses
+      template:
         src: "{{ prometheus_config_template }}"
-        dest: "{{ prometheus_config }}"
-        owner: "{{ docker_files_owner }}"
-        group: "{{ docker_group }}"
-        mode: "{{ docker_files_mode }}"
-
-    - name: Run prometheus container
-      community.docker.docker_container:
-        name: "{{ prometheus_container_name }}"
-        image: "{{ prometheus_image }}"
+        dest: "{{ prometheus_config_dir }}/prometheus.yml"
+        owner: "{{ prometheus_config_owner }}"
+        group: "{{ prometheus_config_group }}"
+        mode: 0644
+  
+    - name: Start Prometheus service
+      service:
+        name: prometheus
         state: started
-        restart_policy: always
-        published_ports:
-          - "{{ prometheus_port }}:9090"
-        mounts:
-          - source: prom_data
-            target: /prometheus
-          - source: prom_configs
-            target: /etc/prometheus
-          - type: bind
-            source: "{{ prometheus_config }}"
-            target: /etc/prometheus/prometheus.yml
-        healthcheck:
-          test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:9090/status || exit 1"]
+        enabled: yes
 
-    - name: Add bridge network between prometheus and grafana
-      docker_network:
-        name: grafana_prometheus_bridge
-        connected:
-          - "{{ grafana_container_name }}"
-          - "{{ prometheus_container_name }}"
+    - name: Start Grafana service
+      service:
+        name: grafana-server
+        state: started
+        enabled: yes
+
+    - name: Configure grafana dashboards
+      community.grafana.grafana_dashboard:
+        dashboard_url: "{{ item.url }}"
+        grafana_url: "{{ grafana_url }}"
+      loop: "{{ grafana_dashboards }}"
 
     - name: Configure grafana datasources
       community.grafana.grafana_datasource:
@@ -81,9 +72,3 @@
         tls_skip_verify: true
         grafana_url: "{{ grafana_url }}"
       loop: "{{ grafana_datasources }}"
-
-    - name: Configure grafana dashboards 
-      community.grafana.grafana_dashboard:
-        dashboard_url: "{{ item.url }}"
-        grafana_url: "{{ grafana_url }}"
-      loop: "{{ grafana_dashboards }}"

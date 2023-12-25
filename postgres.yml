@@ -37,6 +37,22 @@
             trim
           }}
 
+    - name: Retrive admin user credentials from vault
+      community.hashi_vault.vault_kv2_get:
+        url: "{{ hashicorp_vault_server }}"
+        auth_method: "approle"
+        role_id: "{{ hashicorp_vault_approle_ansible_role_id }}"
+        secret_id: "{{ hashicorp_vault_approle_ansible_secret_id }}"
+        engine_mount_point: "{{ hashicorp_vault_postgres_mount_point }}"
+        path: "{{ hashicorp_vault_postgres_path }}"
+      register: postgres_credentials
+      no_log: true # Ensure not to log credentials
+
+    - name: Set postgres credentials
+      ansible.builtin.set_fact:
+        postgres_admin_user: "{{ postgres_credentials.secret.admin_username }}"
+        postgres_admin_password: "{{ postgres_credentials.secret.admin_password }}"
+
     - name: Create admin user
       google.cloud.gcp_sql_user:
         instance:
@@ -67,4 +83,4 @@
         name: "{{ postgres_schedule_database_name }}"
         state: restore
         target: "{{ postgres_initial_data_dest }}"
-      when: postgres_restore_dump
+      when: envirnoment == "dev" or envirnoment == "stage"

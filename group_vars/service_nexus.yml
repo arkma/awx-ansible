@@ -1,7 +1,6 @@
 # Nexus configuration
 nexus_upgrade: false
 nexus_default_admin_password: admin123
-nexus_admin_password: "YOUR_ADMIN_PASSOWRD"
 
 nexus_timezone: UTC
 nexus_delete_default_repos: true
@@ -92,4 +91,4 @@ certbot_create_standalone_stop_services:
 certbot_certs:
   - email: "{{ certbot_email }}"
     domains:
-      - nexus.smaha.top
+      - "{{ nexus_public_hostname }}"

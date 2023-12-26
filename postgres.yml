@@ -43,7 +43,7 @@
         auth_method: "approle"
         role_id: "{{ hashicorp_vault_approle_ansible_role_id }}"
         secret_id: "{{ hashicorp_vault_approle_ansible_secret_id }}"
-        engine_mount_point: "{{ hashicorp_vault_postgres_mount_point }}"
+        engine_mount_point: "{{ hashicorp_vault_application_mount_point }}"
         path: "{{ hashicorp_vault_postgres_path }}"
       register: postgres_credentials
       no_log: true # Ensure not to log credentials

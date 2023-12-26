@@ -1,6 +1,7 @@
 ---
 # Secrets related variables
 ansible_ssh_user: sa_101994008222971342723
+ansible_ssh_private_key_file: "/home/programmer/iam_user_keys/awx-compute/sa_service_key"
 
 # Global
 envirnoment: stage # dev/stage/prod
@@ -19,13 +20,14 @@ hashicorp_vault_app_secret_id: "YOUR_APP_APPROLE_SECRET_ID"
 
 
 ## Mount points
-hashicorp_vault_postgres_mount_point: class_schedule
+hashicorp_vault_application_mount_point: class_schedule
 hashicorp_vault_datadog_mount_point: monitoring
 hashicorp_vault_nexus_mount_point: artifact_repository
 hashicorp_vault_certbot_mount_point: certbot
 
 ## Secrets paths
 hashicorp_vault_postgres_path: "{{ envirnoment }}/postgresql"
+hashicorp_vault_mongodb_path: "{{ envirnoment }}/mongodb"
 hashicorp_vault_datadog_path: datadog
 hashicorp_vault_nexus_path: nexus
 hashicorp_vault_certbot_path: config

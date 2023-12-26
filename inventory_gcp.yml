@@ -3,7 +3,7 @@ projects:
   - softseve-blue-team
 filters:
   - status = RUNNING
-service_account_file: /home/programmer/iam_user_keys/awx-compute/awx-compute.json
+service_account_file: PWD_TO_SA_PRIVATE_KEY
 auth_kind: serviceaccount
 keyed_groups:
   - key: labels.env

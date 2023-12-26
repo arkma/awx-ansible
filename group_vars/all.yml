@@ -1,7 +1,7 @@
 ---
 # Secrets related variables
 ansible_ssh_user: sa_101994008222971342723
-ansible_ssh_private_key_file: "/home/programmer/iam_user_keys/awx-compute/sa_service_key"
+ansible_ssh_private_key_file: "YOUR_ANSINBLE_PRIVATE_KEY"
 
 # Global
 envirnoment: stage # dev/stage/prod

@@ -32,13 +32,6 @@ k8s_consul_gateway_reference_grant_chart: "{{ k8s_clone_repo }}/consul/consul-ga
 k8s_datadog_chart_values: "{{ k8s_clone_repo }}/monitoring/datadog-values.yaml"
 k8s_consul_chart_values: "{{ k8s_clone_repo }}/consul/values.yaml"
 
-# Hashicorp vault
-hashicorp_vault_server_ip: "YOUR_HASHICORP_VAULT_SERVER_IP"
-hashicorp_vault_server_port: 8200
-hashicorp_vault_server: "http://{{ hashicorp_vault_server_ip }}:{{ hashicorp_vault_server_port }}/"
-hashicorp_vault_root_token: "YOUR_HASHICORP_VAULT_ROOT_TOKEN"
-
-
 # Application
 schedule_app_namespace: schedule-app
 schedule_app_backend_name: backend
@@ -46,7 +39,9 @@ schedule_app_frontend_name: frontend
 schedule_app_backend_overwrite_values:
   - value: environmentType=stage
   - value: 'secretStore.vaultProvider.server={{ hashicorp_vault_server | quote }}'
-  - value: 'secretStore.vaultProvider.secretToken.token={{ hashicorp_vault_root_token }}'
+  - value: 'secretStore.vaultProvider.auth.roleId={{ hashicorp_vault_app_role_id }}'
+  - value: 'secretStore.vaultProvider.auth.secret.secretId={{ hashicorp_vault_app_secret_id }}'
+
 
 # Patch redis headless service. There is no way to set it in helm chart values
 schedule_app_redis_name: backend-redis-headless
@@ -54,8 +49,6 @@ schedule_app_redis_patch_definition:
   metadata:
     labels:
       consul.hashicorp.com/service-ignore: 'true'
-
-
 
 # Consul
 hashicorp_repo_url: "https://helm.releases.hashicorp.com"
@@ -78,9 +71,6 @@ gateway_rg_release_name: "consul-frontend-gateway"
 gateway_rg_release_namespace: "{{ schedule_app_namespace}}"
 
 # Datadog
-datadog_secret_name: "datadog-secret"
-datadog_secret_api_key: "YOUR_DATADOG_API_KEY"
-
 datadog_repo_url: "https://helm.datadoghq.com"
 datadog_repo_name: datadog
 datadog_chart_name: datadog
@@ -90,13 +80,10 @@ datadog_overwrite_values:
   - value: "{{ k8s_datadog_chart_values }}"
     value_type: file 
 
-
-
+datadog_secret_name: "datadog-secret"
 
 # Postgres configuration
 postgres_port: 5432
-postgres_admin_user: "YOUR_ADMIN_USER"
-postgres_admin_password: "YOUR_ADMIN_PASSWORD"
 postgres_schedule_database_name: schedule
 postgres_restore_dump: true
 postgres_initial_data_dest: "./files/initial_data.sql"

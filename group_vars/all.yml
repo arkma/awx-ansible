@@ -1,6 +1,31 @@
 ---
 # Secrets related variables
 ansible_ssh_user: sa_101994008222971342723
-# ansible_ssh_private_key_file: "PWD_TO_SA_PRIVATE_KEY"
 
-node_exporter_port: 18216
+# Global
+envirnoment: stage # dev/stage/prod
+
+
+# Hashicorp vault
+hashicorp_vault_server_ip: "YOUR_HASHICORP_VAULT_SERVER_IP"
+hashicorp_vault_server_port: 8200
+hashicorp_vault_server: "http://{{ hashicorp_vault_server_ip }}:{{ hashicorp_vault_server_port }}/"
+
+hashicorp_vault_approle_ansible_role_id: "YOUR_ANSIBLE_APPROLE_ROLE_ID"
+hashicorp_vault_approle_ansible_secret_id: "YOUR_ANSIBLE_APPROLE_SECRET_ID"
+
+hashicorp_vault_app_role_id: "YOUR_APP_APPROLE_ROLE_ID"
+hashicorp_vault_app_secret_id: "YOUR_APP_APPROLE_SECRET_ID"
+
+
+## Mount points
+hashicorp_vault_postgres_mount_point: class_schedule
+hashicorp_vault_datadog_mount_point: monitoring
+hashicorp_vault_nexus_mount_point: artifact_repository
+hashicorp_vault_certbot_mount_point: certbot
+
+## Secrets paths
+hashicorp_vault_postgres_path: "{{ envirnoment }}/postgresql"
+hashicorp_vault_datadog_path: datadog
+hashicorp_vault_nexus_path: nexus
+hashicorp_vault_certbot_path: config

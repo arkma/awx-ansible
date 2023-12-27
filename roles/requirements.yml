@@ -2,3 +2,23 @@
   name: ansible-community.ansible-vault
   scm: git
   version: master
+
+- src: https://github.com/geerlingguy/ansible-role-apache.git
+  name: geerlingguy.apache
+  scm: git
+  version: master
+
+- src: https://github.com/geerlingguy/ansible-role-java.git
+  name: geerlingguy.java
+  scm: git
+  version: master
+
+- src: https://github.com/geerlingguy/ansible-role-certbot.git
+  name: geerlingguy.certbot
+  scm: git
+  version: master
+
+- src: https://github.com/ansible-ThoTeam/nexus3-oss.git
+  name: ansible-thoteam.nexus3-oss
+  scm: git
+  version: main

@@ -2,3 +2,12 @@
   name: ansible-community.ansible-vault
   scm: git
   version: master
+
+- name: geerlingguy.apache
+- name: geerlingguy.java
+- name: geerlingguy.certbot
+
+- src: https://github.com/ansible-ThoTeam/nexus3-oss.git
+  name: ansible-thoteam.nexus3-oss
+  scm: git
+  version: main

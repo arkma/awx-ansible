@@ -2,13 +2,9 @@
 - name: Install MongoDB on GCP Instance ansible-mongo
   hosts: service_mongodb
   become: yes
-  vars:
-    mongo_config_owner: "mongodb"
-    mongo_config_group: "mongodb"
-
   tasks:
     - name: Install gnupg and curl
-      apt:
+      ansible.builtin.apt:
         name: "{{ item }}"
         state: present
       loop:
@@ -21,26 +17,26 @@
       register: key_file_stat
 
     - name: Download MongoDB GPG key and dearmor
-      shell: "{{ mongo_gpg_install }}"
+      ansible.builtin.shell: "{{ mongo_gpg_install }}"
       when: key_file_stat.stat.exists == False
 
     - name: Add MongoDB APT repository line
-      lineinfile:
+      ansible.builtin.lineinfile:
         path: /etc/apt/sources.list.d/mongodb-org-{{ mongo_version }}.list
         line:  "{{ mongo_repository }}"
         create: yes
 
     - name: Update apt cache
-      apt:
+      ansible.builtin.apt:
         update_cache: yes
 
     - name: Install MongoDB
-      apt:
+      ansible.builtin.apt:
         name: mongodb-org
         state: present
 
     - name: Create MongoDB data directory
-      file:
+      ansible.builtin.file:
         path: "{{ mongo_data_dir }}"
         state: directory
         owner: "{{ mongo_config_owner }}"
@@ -48,12 +44,12 @@
         mode: 0755
 
     - name: Install MongoDB tools
-      apt:
+      ansible.builtin.apt:
         name: mongodb-database-tools
         state: present
 
     - name: Start MongoDB service
-      service:
+      ansible.builtin.service:
         name: mongod
         state: started
         enabled: yes

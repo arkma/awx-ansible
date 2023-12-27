@@ -1,0 +1,10 @@
+galaxy_info:
+  author: Arkadii
+  description: This role installs full application stack on single kubernetes cluster
+  license: BSD-3-Clause
+
+  min_ansible_version: 2.1
+
+  galaxy_tags: []
+
+dependencies: []

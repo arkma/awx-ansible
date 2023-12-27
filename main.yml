@@ -1,12 +1,12 @@
 ---
-- name: Include the mongo playbook
-  ansible.builtin.import_playbook: mongo.yml
+- name: Import the mongo playbook
+  import_playbook: mongo.yml
 
-- name: Include the postgres playbook
-  ansible.builtin.import_playbook: postgres.yml
+- name: Import the postgres playbook
+  import_playbook: postgres.yml
 
-- name: Include the kubernetes playbook
-  ansible.builtin.import_playbook: kubernetes.yml
+- name: Import the patch vault playbook
+  import_playbook: patch_vault_secrets.yml
 
-- name: Include the grafana playbook
-  ansible.builtin.import_playbook: grafana.yml
+- name: Import the kubernetes playbook
+  import_playbook: kubernetes.yml

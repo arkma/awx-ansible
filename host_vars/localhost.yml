@@ -5,87 +5,14 @@ gcp_project_env: GCP_PROJECT
 cluster_name: stage-schedule
 cluster_zone: us-central1-b
 
-# External secrets (es) variables
-es_repo_url: "https://charts.external-secrets.io"
-es_repo_name: external-secrets
-es_chart_name: external-secrets
-es_namespace: external-secrets
-es_release_name: external-secrets
-es_overwrite_values:
-  - value: installCRDs=true
-
-es_is_ready:
-  service_kind: Deployment
-  service_name: "{{ es_release_name }}-webhook"
-  wait_condition: 
-    reason: MinimumReplicasAvailable
-    type: Available
-
-
-# Git
-k8s_repo: "https://github.com/BlueTeam2/class-schedule-k8s.git"
-k8s_clone_repo: /tmp/k8s_class_schedule_chart
-k8s_backend_chart: "{{ k8s_clone_repo }}/backend"
-k8s_frontend_chart: "{{ k8s_clone_repo }}/frontend"
-k8s_consul_gateway_chart: "{{ k8s_clone_repo }}/consul/consul-gateway"
-k8s_consul_gateway_reference_grant_chart: "{{ k8s_clone_repo }}/consul/consul-gateway-reference-grant"
-k8s_datadog_chart_values: "{{ k8s_clone_repo }}/monitoring/datadog-values.yaml"
-k8s_consul_chart_values: "{{ k8s_clone_repo }}/consul/values.yaml"
-
 # Application
 schedule_app_namespace: schedule-app
-schedule_app_backend_name: backend
-schedule_app_frontend_name: frontend
-schedule_app_backend_overwrite_values:
-  - value: environmentType=stage
-  - value: 'secretStore.vaultProvider.server={{ hashicorp_vault_server | quote }}'
-  - value: 'secretStore.vaultProvider.auth.roleId={{ hashicorp_vault_approle_application_role_id }}'
-  - value: 'secretStore.vaultProvider.auth.secret.secretId={{ hashicorp_vault_approle_application_secret_id }}'
 
 # Patch vault secret to renew token
 schedule_app_hashicorp_approle_secret_name: hashicorp-vault-approle-token
 schedule_app_secret_patch_definition:
   data:
     secret-id: "{{ hashicorp_vault_approle_application_secret_id | b64encode }}"
-
-# Patch redis headless service. There is no way to set it in helm chart values
-schedule_app_redis_name: backend-redis-headless
-schedule_app_redis_patch_definition:
-  metadata:
-    labels:
-      consul.hashicorp.com/service-ignore: 'true'
-
-# Consul
-hashicorp_repo_url: "https://helm.releases.hashicorp.com"
-hashicorp_repo_name: hashicorp
-consul_chart_name: consul
-consul_release_name: consul
-consul_namespace: consul
-consul_overwrite_values:
-  - value: "{{ k8s_consul_chart_values }}"
-    value_type: file 
-
-
-# Frontend gateway
-gateway_release_name: "consul-frontend-gateway"
-gateway_release_namespace: "{{ consul_release_name }}"
-
-
-# Frontend gateway referencegrant
-gateway_rg_release_name: "consul-frontend-gateway"
-gateway_rg_release_namespace: "{{ schedule_app_namespace}}"
-
-# Datadog
-datadog_repo_url: "https://helm.datadoghq.com"
-datadog_repo_name: datadog
-datadog_chart_name: datadog
-datadog_release_name: datadog
-datadog_namespace: monitoring
-datadog_overwrite_values:
-  - value: "{{ k8s_datadog_chart_values }}"
-    value_type: file 
-
-datadog_secret_name: "datadog-secret"
 
 # Postgres configuration
 postgres_port: 5432

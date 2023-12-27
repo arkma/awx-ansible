@@ -1,0 +1,24 @@
+---
+- name: Clone kubernetes repository
+  import_tasks: clone_repo.yml
+
+- name: Deploy consul
+  import_tasks: deploy_consul.yml
+
+- name: Deploy external-secrets
+  import_tasks: deploy_external_secrets.yml
+
+- name: Deploy datadog
+  import_tasks: deploy_datadog.yml
+
+- name: Retrieve required secrets from Vault
+  import_tasks: retrive_vault_credentials.yml
+
+- name: Deploy backend
+  import_tasks: deploy_backend.yml
+
+- name: Deploy frontend
+  import_tasks: deploy_frontend.yml
+
+- name: Deploy api gateway
+  import_tasks: deploy_api_gateway.yml

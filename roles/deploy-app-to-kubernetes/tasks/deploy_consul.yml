@@ -1,0 +1,14 @@
+---
+- name: Add HashiCorp repository
+  kubernetes.core.helm_repository:
+    repo_name: "{{ hashicorp_repo_name }}"
+    repo_url: "{{ hashicorp_repo_url }}"
+
+- name: Deploy Consul chart
+  kubernetes.core.helm:
+    chart_ref: "{{ hashicorp_repo_name }}/{{ consul_chart_name }}"
+    create_namespace: true
+    release_namespace: "{{ consul_namespace }}"
+    release_name: "{{ consul_release_name }}"
+    values_files:
+      - "{{ k8s_consul_chart_values }}"

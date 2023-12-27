@@ -1,0 +1,5 @@
+---
+- name: Clone Kubernetes chart repository
+  ansible.builtin.git:
+    repo: "{{ k8s_repo }}"
+    dest: "{{ k8s_clone_repo }}"

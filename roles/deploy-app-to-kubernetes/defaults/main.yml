@@ -1,0 +1,21 @@
+---
+# Global
+envirnoment: dev
+
+# Git
+k8s_repo: "https://github.com/BlueTeam2/class-schedule-k8s.git"
+k8s_clone_repo: /tmp/k8s_class_schedule_chart
+
+# Application
+schedule_app_namespace: schedule-app
+schedule_app_backend_name: backend
+schedule_app_frontend_name: frontend
+
+# Vault
+hashicorp_vault_server: "YOUR_HASHICORP_VAULT_SERVER"
+
+hashicorp_vault_ansible_username: "YOUR_ANSIBLE_USERNAME"
+hashicorp_vault_ansible_password: "YOUR_ANSIBLE_PASSWORD"
+
+hashicorp_vault_approle_application_role_id_path: "auth/approle/role/app_{{ envirnoment }}/role-id"
+hashicorp_vault_approle_application_secret_id_path: "auth/approle/role/app_{{ envirnoment }}/secret-id"

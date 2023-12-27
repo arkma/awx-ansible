@@ -8,3 +8,6 @@ mongo_pgp_url: "https://www.mongodb.org/static/pgp/server"
 
 mongo_repository: "deb [ arch=amd64,arm64 signed-by={{ mongo_user_keyrings_dir }}-{{ mongo_version }}.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/{{ mongo_version }} multiverse"
 mongo_gpg_install: "curl -fsSL {{ mongo_pgp_url }}-{{ mongo_version }}.asc | sudo gpg -o {{ mongo_user_keyrings_dir }}-{{ mongo_version }}.gpg --dearmor"
+
+mongo_config_owner: "mongodb"
+mongo_config_group: "mongodb"

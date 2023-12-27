@@ -39,9 +39,14 @@ schedule_app_frontend_name: frontend
 schedule_app_backend_overwrite_values:
   - value: environmentType=stage
   - value: 'secretStore.vaultProvider.server={{ hashicorp_vault_server | quote }}'
-  - value: 'secretStore.vaultProvider.auth.roleId={{ hashicorp_vault_app_role_id }}'
-  - value: 'secretStore.vaultProvider.auth.secret.secretId={{ hashicorp_vault_app_secret_id }}'
+  - value: 'secretStore.vaultProvider.auth.roleId={{ hashicorp_vault_approle_application_role_id }}'
+  - value: 'secretStore.vaultProvider.auth.secret.secretId={{ hashicorp_vault_approle_application_secret_id }}'
 
+# Patch vault secret to renew token
+schedule_app_hashicorp_approle_secret_name: hashicorp-vault-approle-token
+schedule_app_secret_patch_definition:
+  data:
+    secret-id: "{{ hashicorp_vault_approle_application_secret_id | b64encode }}"
 
 # Patch redis headless service. There is no way to set it in helm chart values
 schedule_app_redis_name: backend-redis-headless

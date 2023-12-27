@@ -15,7 +15,8 @@
           {{ 
             sql_instances.resources |
             selectattr('settings.userLabels.app', 'defined') |
-            selectattr('settings.userLabels.app', 'equalto', 'schedule')
+            selectattr('settings.userLabels.app', 'equalto', 'schedule') |
+            selectattr('settings.userLabels.env', 'equalto', envirnoment)
           }}
         
     - name: Extract instace ip and name
@@ -40,9 +41,9 @@
     - name: Retrive admin user credentials from vault
       community.hashi_vault.vault_kv2_get:
         url: "{{ hashicorp_vault_server }}"
-        auth_method: "approle"
-        role_id: "{{ hashicorp_vault_approle_ansible_role_id }}"
-        secret_id: "{{ hashicorp_vault_approle_ansible_secret_id }}"
+        auth_method: "userpass"
+        username: "{{ hashicorp_vault_ansible_username }}"
+        password: "{{ hashicorp_vault_ansible_password }}"
         engine_mount_point: "{{ hashicorp_vault_application_mount_point }}"
         path: "{{ hashicorp_vault_postgres_path }}"
       register: postgres_credentials

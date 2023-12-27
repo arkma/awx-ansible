@@ -6,9 +6,9 @@
     - name: Retrive required for nexus secrets from vault
       community.hashi_vault.vault_kv2_get:
         url: "{{ hashicorp_vault_server }}"
-        auth_method: "approle"
-        role_id: "{{ hashicorp_vault_approle_ansible_role_id }}"
-        secret_id: "{{ hashicorp_vault_approle_ansible_secret_id }}"
+        auth_method: userpass
+        username: "{{ hashicorp_vault_ansible_username }}"
+        password: "{{ hashicorp_vault_ansible_password }}"
         engine_mount_point: "{{ hashicorp_vault_nexus_mount_point }}"
         path: "{{ hashicorp_vault_nexus_path }}"
       register: nexus_credentials
@@ -29,9 +29,9 @@
     - name: Retrive required for certbot secrets from vault
       community.hashi_vault.vault_kv2_get:
         url: "{{ hashicorp_vault_server }}"
-        auth_method: "approle"
-        role_id: "{{ hashicorp_vault_approle_ansible_role_id }}"
-        secret_id: "{{ hashicorp_vault_approle_ansible_secret_id }}"
+        auth_method: userpass
+        username: "{{ hashicorp_vault_ansible_username }}"
+        password: "{{ hashicorp_vault_ansible_password }}"
         engine_mount_point: "{{ hashicorp_vault_certbot_mount_point }}"
         path: "{{ hashicorp_vault_certbot_path }}"
       register: certbot_credentials

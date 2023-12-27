@@ -12,12 +12,12 @@ hashicorp_vault_server_ip: "YOUR_HASHICORP_VAULT_SERVER_IP"
 hashicorp_vault_server_port: 8200
 hashicorp_vault_server: "http://{{ hashicorp_vault_server_ip }}:{{ hashicorp_vault_server_port }}/"
 
-hashicorp_vault_approle_ansible_role_id: "YOUR_ANSIBLE_APPROLE_ROLE_ID"
-hashicorp_vault_approle_ansible_secret_id: "YOUR_ANSIBLE_APPROLE_SECRET_ID"
+## Users authentification
+hashicorp_vault_ansible_username: "YOUR_ANSIBLE_USERNAME"
+hashicorp_vault_ansible_password: "YOUR_ANSIBLE_PASSWORD"
 
-hashicorp_vault_app_role_id: "YOUR_APP_APPROLE_ROLE_ID"
-hashicorp_vault_app_secret_id: "YOUR_APP_APPROLE_SECRET_ID"
-
+hashicorp_vault_approle_application_role_id_path: "auth/approle/role/app_{{ envirnoment }}/role-id"
+hashicorp_vault_approle_application_secret_id_path: "auth/approle/role/app_{{ envirnoment }}/secret-id"
 
 ## Mount points
 hashicorp_vault_application_mount_point: class_schedule

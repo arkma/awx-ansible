@@ -54,6 +54,9 @@ dependencies:
     requests
     psycopg2-binary
     jmespath
+additional_build_files:
+  - src: roles/requirements.yml
+    dest: configs
 additional_build_steps:
   append_base:
     - RUN $PYCMD -m pip install -U pip
@@ -72,6 +75,7 @@ additional_build_steps:
         ./get_helm.sh
 
     # - RUN apk add curl openssl bash --no-cache
+    # Install Google-cloud-cli 
     - |
       RUN echo "[google-cloud-cli]" > /etc/yum.repos.d/google-cloud-sdk.repo && \
         echo "name=Google Cloud CLI" >> /etc/yum.repos.d/google-cloud-sdk.repo && \
@@ -81,9 +85,28 @@ additional_build_steps:
         echo "repo_gpgcheck=0" >> /etc/yum.repos.d/google-cloud-sdk.repo && \
         echo "gpgkey=https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg" >> /etc/yum.repos.d/google-cloud-sdk.repo
 
-    - RUN ansible-galaxy role install geerlingguy.apache
-    - RUN ansible-galaxy role install geerlingguy.java
+    # Install Azure-cloud-cli in the same way as google cli
+    - RUN yum install -y https://packages.microsoft.com/config/rhel/9.0/packages-microsoft-prod.rpm
+
+    # - RUN ansible-galaxy role install geerlingguy.apache
+    # - RUN ansible-galaxy role install geerlingguy.java
+
+    # From galaxy
+    - name: geerlingguy.apache
+    - name: geerlingguy.java
+    - name: geerlingguy.certbot
+
+    # from GitHub, overriding the name and specifying a specific tag
+    - name: ansible-thoteam.nexus3-oss
+      src: https://github.com/ansible-ThoTeam/nexus3-oss.git
+      version: main
+
+    # additional_build_steps:
+    #   prepend_galaxy:
+    #     - COPY _build/configs/ansible.cfg 
 
     - RUN yum install -y google-cloud-cli
     - RUN yum install -y google-cloud-cli-gke-gcloud-auth-plugin
-  
+    - RUN yum install -y azure-cli
+
+    - RUN ansible-galaxy install -r requirements.yml

@@ -1,0 +1,46 @@
+---
+- name: Configure azure kubernetes cluster
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Get facts for one Azure Kubernetes Service
+      azure_rm_aks_info:
+        auth_source: "env"
+        resource_group: "prod-schedule"
+        show_kubeconfig: "admin"
+        tags:
+          - "env:{{ envirnoment }}"
+          - "app:schedule"
+      register: aks_clusters
+
+    - name: Get required cluster
+      ansible.builtin.set_fact:
+        aks_cluster: "{{ aks_clusters.aks | first }}"
+
+    - name: Debug
+      debug:
+        msg: "{{ aks_cluster }}"
+
+    - name: Create kubeconfig file
+      copy:
+        content: "{{ aks_cluster.kube_config }}"
+        dest: "$HOME/.kube/config"  # Specify the destination path and file name
+        mode: '0644'
+
+    - name: Activate service account
+      ansible.builtin.shell: 
+        cmd: |
+          gcloud auth activate-service-account --key-file="${{ gcp_sa_env }}" --project "${{ gcp_project_env }}"
+    
+    - name: Generate kubeconfig to use kubeclt
+      ansible.builtin.shell: 
+        cmd: |
+          gcloud container clusters get-credentials "{{ cluster_name }}" --zone "{{ cluster_zone }}" --project "${{ gcp_project_env }}"
+
+    - name: Debug
+      kubernetes.core.k8s_info:
+      retries: config_msg
+
+    - name: Debug
+      debug:
+        msg: "{{ config_msg }}"

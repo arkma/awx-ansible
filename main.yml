@@ -8,5 +8,8 @@
 - name: Import the patch vault playbook
   import_playbook: patch_vault_secrets.yml
 
-- name: Import the kubernetes playbook
-  import_playbook: kubernetes.yml
+- name: Import the kubernetes_gcp playbook
+  import_playbook: kubernetes_gcp.yml
+
+- name: Import the kubernetes_aks playbook
+  import_playbook: kubernetes_aks.yml

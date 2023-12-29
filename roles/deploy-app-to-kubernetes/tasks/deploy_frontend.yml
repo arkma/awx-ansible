@@ -1,6 +1,7 @@
 ---
 - name: Deploy frontend chart
   kubernetes.core.helm:
+    kubeconfig: "{{ k8s_kubeconfig_path }}"
     release_name: "{{ schedule_app_frontend_name }}"
     chart_ref: "{{ k8s_frontend_chart }}"
     release_namespace: "{{ schedule_app_namespace }}"

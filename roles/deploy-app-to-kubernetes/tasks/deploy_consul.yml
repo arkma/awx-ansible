@@ -6,6 +6,7 @@
 
 - name: Deploy Consul chart
   kubernetes.core.helm:
+    kubeconfig: "{{ k8s_kubeconfig_path }}"
     chart_ref: "{{ hashicorp_repo_name }}/{{ consul_chart_name }}"
     create_namespace: true
     release_namespace: "{{ consul_namespace }}"

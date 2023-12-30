@@ -22,4 +22,4 @@
         mode: "{{ az_kubeconfig_mode }}"
 
   roles:
-    - { role: deploy-app-to-kubernetes, k8s_kubeconfig_path: "{{ az_kubeconfig_path }}" }
+    - { role: deploy-app-to-kubernetes, k8s_kubeconfig_path: "{{ az_kubeconfig_path }}", consul_dc_name: "{{ aks_conul_dc_name }}" }

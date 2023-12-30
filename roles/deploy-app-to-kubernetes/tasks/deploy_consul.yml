@@ -13,3 +13,4 @@
     release_name: "{{ consul_release_name }}"
     values_files:
       - "{{ k8s_consul_chart_values }}"
+    set_values: "{{ consul_overwrite_values }}"

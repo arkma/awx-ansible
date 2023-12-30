@@ -22,3 +22,6 @@ hashicorp_vault_ansible_password: "YOUR_ANSIBLE_PASSWORD"
 
 hashicorp_vault_approle_application_role_id_path: "auth/approle/role/app_{{ envirnoment }}/role-id"
 hashicorp_vault_approle_application_secret_id_path: "auth/approle/role/app_{{ envirnoment }}/secret-id"
+
+# Consul
+consul_dc_name: dc1

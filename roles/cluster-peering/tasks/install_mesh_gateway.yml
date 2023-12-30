@@ -1,0 +1,10 @@
+---
+- name: Add mesh gateway
+  kubernetes.core.k8s:
+    kubeconfig: "{{ item.kubeconfig_path }}"
+    state: present
+    namespace: "{{ consul_namespace }}"
+    definition: "{{ lookup('ansible.builtin.template', 'templates/mesh-gateway.yaml.j2') | from_yaml }}"
+    validate:
+      fail_on_error: yes
+  loop: "{{ datacenters }}"

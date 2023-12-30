@@ -1,0 +1,12 @@
+---
+- name: Install mesh gateway on both clusters
+  import_tasks: install_mesh_gateway.yml
+
+- name: Install proxydefaults on both clusters
+  import_tasks: install_proxy_default.yml
+
+- name: Configure peering acceptor
+  import_tasks: peering_acceptor.yml
+
+- name: Configure peering dialer
+  import_tasks: peering_dialer.yml

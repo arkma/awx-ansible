@@ -1,9 +1,29 @@
 ---
+# Global
+k8s_kubeconfig_base_path: "{{ ansible_env.HOME }}/.kube"
+
 # GCP configuration
 gcp_sa_env: GCP_SERVICE_ACCOUNT_FILE
 gcp_project_env: GCP_PROJECT
+gcp_kubeconfig_env: KUBECONFIG
+gcp_kubeconfig_path: "{{ k8s_kubeconfig_base_path }}/gcp_config"
+gcp_conul_dc_name: gcp
+
+
 cluster_name: stage-schedule
 cluster_zone: us-central1-b
+
+# Azure configuraion
+az_kubeconfig_path: "{{ k8s_kubeconfig_base_path }}/az_config"
+az_kubeconfig_mode: "0644"
+az_extract_kubeconfig_type: "admin"
+az_auth_source: "env"
+aks_cluster_rg: stage-schedule
+aks_conul_dc_name: aks
+az_cluster_tags:
+  - "env:{{ envirnoment }}"
+  - "app:schedule"
+
 
 # Application
 schedule_app_namespace: schedule-app

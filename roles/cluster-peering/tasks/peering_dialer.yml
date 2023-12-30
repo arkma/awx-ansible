@@ -1,0 +1,14 @@
+---
+- name: Add peering secret to dialer cluster
+  kubernetes.core.k8s:
+    kubeconfig: "{{ peering_dialer_kubeconfig_path }}"
+    state: present
+    namespace: "{{ consul_namespace }}"
+    definition: "{{ peering_secret.resources[0] | ansible.utils.remove_keys(target=['resourceVersion','managedFields','uid'])  }}"
+
+- name: Add peering dialer
+  kubernetes.core.k8s:
+    kubeconfig: "{{ peering_dialer_kubeconfig_path }}"
+    state: present
+    namespace: "{{ consul_namespace }}"
+    definition: "{{ lookup('ansible.builtin.template', 'templates/peering-dialer.yaml.j2') | from_yaml }}"

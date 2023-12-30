@@ -45,8 +45,7 @@ consul_chart_name: consul
 consul_release_name: consul
 consul_namespace: consul
 consul_overwrite_values:
-  - value: "{{ k8s_consul_chart_values }}"
-    value_type: file 
+  - value: "global.datacenter={{ consul_dc_name }}"
 
 
 # Frontend gateway

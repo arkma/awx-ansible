@@ -1,0 +1,43 @@
+---
+- name: Configure azure kubernetes cluster
+  hosts: localhost
+  gather_facts: true # True to retrieve user home directory
+  pre_tasks:
+    - name: Get kubeconfig for the cluster
+      azure_rm_aks_info:
+        auth_source: "{{ az_auth_source }}"
+        resource_group: "{{ aks_cluster_rg }}"
+        show_kubeconfig: "{{ az_extract_kubeconfig_type }}"
+        tags: "{{ az_cluster_tags }}"
+      register: aks_clusters
+
+    - name: Extract cluster from the list
+      ansible.builtin.set_fact:
+        aks_cluster_kubeconfig: "{{ aks_clusters.aks | map(attribute='kube_config') | first }}"
+
+    - name: Create kubeconfig file for the cluster
+      copy:
+        content: "{{ aks_cluster_kubeconfig }}"
+        dest: "{{ az_kubeconfig_path }}"  # Specify the destination path and file name
+        mode: "{{ az_kubeconfig_mode }}"
+
+    - name: Activate service account
+      ansible.builtin.shell: 
+        cmd: |
+          gcloud auth activate-service-account --key-file="${{ gcp_sa_env }}" --project "${{ gcp_project_env }}"
+    
+    - name: Generate kubeconfig to use kubeclt
+      ansible.builtin.shell: 
+        cmd: |
+          gcloud container clusters get-credentials "{{ cluster_name }}" --zone "{{ cluster_zone }}" --project "${{ gcp_project_env }}"
+      environment:
+        KUBECONFIG: "{{ gcp_kubeconfig_path }}"
+
+  roles:
+    - { 
+      role: cluster-peering, 
+      peering_acceptor_dc_name: "{{ gcp_conul_dc_name }}",
+      peering_acceptor_kubeconfig_path: "{{ gcp_kubeconfig_path }}",
+      peering_dialer_dc_name: "{{ aks_conul_dc_name }}",
+      peering_dialer_kubeconfig_path: "{{ az_kubeconfig_path }}"
+    }

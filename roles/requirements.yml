@@ -12,3 +12,8 @@
   name: ansible-thoteam.nexus3-oss
   scm: git
   version: main
+
+- src: https://github.com/csuka/ansible_role_mongodb_ubuntu.git
+  name: ansible-mongodb-ubuntu
+  scm: git
+  version: main

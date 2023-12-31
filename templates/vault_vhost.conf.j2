@@ -1,0 +1,37 @@
+{% if item.server_redirect_name is defined %}
+server {
+    listen       {{ item.server_redirect_port | default('80') }};
+{% if nginx_listen_ipv6 %}
+    listen       [::]:{{item.server_redirect_port | default('80') }};
+{% endif %}
+    server_name  {{ item.server_redirect_name }};
+    return       301 $scheme://{{ item.server_name.split(' ')[0] }}$request_uri;
+}
+{% endif %}
+
+server {
+    listen {{ item.listen | default('80') }};
+
+{% if item.server_name is defined %}
+    server_name {{ item.server_name }};
+{% endif %}
+
+{% if item.ssl_certificate is defined %}
+    ssl_certificate {{ item.ssl_certificate }};
+{% endif %}
+{% if item.ssl_certificate_key is defined %}
+    ssl_certificate_key {{ item.ssl_certificate_key }};
+{% endif %}
+
+{% if item.locations is defined %}
+{% for location in item.locations %}
+    location {{ location.path }} {
+        proxy_pass {{ location.proxy_pass }};
+        proxy_http_version {{ location.proxy_http_version }};
+        proxy_send_timeout {{ location.proxy_send_timeout }};
+        proxy_read_timeout {{ location.proxy_read_timeout }};
+        {{ location.proxy_headers |indent(8)  }}
+    }
+{% endfor %}
+{% endif %}
+}

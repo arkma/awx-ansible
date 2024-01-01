@@ -1,13 +1,28 @@
 ---
-# Mongo variables
-mongo_port: 14587
-mongo_version: 7.0
-mongo_data_dir: "/data/db"
-mongo_user_keyrings_dir: "/usr/share/keyrings/mongodb-server"
-mongo_pgp_url: "https://www.mongodb.org/static/pgp/server"
+mongo_restart_config: true
+mongo_restart_seconds: 60
 
-mongo_repository: "deb [ arch=amd64,arm64 signed-by={{ mongo_user_keyrings_dir }}-{{ mongo_version }}.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/{{ mongo_version }} multiverse"
-mongo_gpg_install: "curl -fsSL {{ mongo_pgp_url }}-{{ mongo_version }}.asc | sudo gpg -o {{ mongo_user_keyrings_dir }}-{{ mongo_version }}.gpg --dearmor"
+mongo_thp: false
+mongo_numa: false
 
-mongo_config_owner: "mongodb"
-mongo_config_group: "mongodb"
+mongo_backup:
+  enabled: false
+  dbs:
+    - admin
+    - config
+    - local
+  user: backup
+  pass: temporary_vaule # this value will be overwritten
+  path: /var/lib/mongo_backups
+  owner: mongodb
+  group: mongodb
+  mode: 0660
+  hour: 10
+  minute: 5
+  day: "*"
+  retention: 46  # in hours
+mongo_net:
+  bindIp: 0.0.0.0
+  port: 27017
+mongo_storage:
+  dbPath: /opt/mongo

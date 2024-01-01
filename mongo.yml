@@ -1,56 +1,26 @@
 ---
-- name: Install MongoDB on GCP Instance ansible-mongo
+- name: Install MongoDB
   hosts: service_mongodb
   become: yes
-  tasks:
-    - name: Install gnupg and curl
-      ansible.builtin.apt:
-        name: "{{ item }}"
-        state: present
-      loop:
-        - gnupg
-        - curl
+  pre_tasks:
+    - name: Retrive required for mongo secrets from vault
+      community.hashi_vault.vault_kv2_get:
+        url: "{{ hashicorp_vault_server }}"
+        auth_method: userpass
+        username: "{{ hashicorp_vault_ansible_username }}"
+        password: "{{ hashicorp_vault_ansible_password }}"
+        engine_mount_point: "{{ hashicorp_vault_application_mount_point }}"
+        path: "{{ hashicorp_vault_mongodb_path }}"
+      register: mongo_credentials
+      no_log: true # Ensure not to log credentials
+      delegate_to: localhost
+      become: no
 
-    - name: Check if MongoDB GPG key and dearmor exists
-      ansible.builtin.stat:
-        path: "{{ mongo_user_keyrings_dir }}-{{ mongo_version }}.gpg"
-      register: key_file_stat
+    - name: Extract mongo facts
+      ansible.builtin.set_fact:
+        mongo_adminuser_pass:  "{{ mongo_credentials.secret.admin_user_password }}"
+        mongo_admin_pass:      "{{ mongo_credentials.secret.admin_passowrd }}"
+        mongo_backup:          "{{ mongo_backup | combine({'pass':mongo_credentials.secret.backup_password}) }}"
 
-    - name: Download MongoDB GPG key and dearmor
-      ansible.builtin.shell: "{{ mongo_gpg_install }}"
-      when: key_file_stat.stat.exists == False
-
-    - name: Add MongoDB APT repository line
-      ansible.builtin.lineinfile:
-        path: /etc/apt/sources.list.d/mongodb-org-{{ mongo_version }}.list
-        line:  "{{ mongo_repository }}"
-        create: yes
-
-    - name: Update apt cache
-      ansible.builtin.apt:
-        update_cache: yes
-
-    - name: Install MongoDB
-      ansible.builtin.apt:
-        name: mongodb-org
-        state: present
-
-    - name: Create MongoDB data directory
-      ansible.builtin.file:
-        path: "{{ mongo_data_dir }}"
-        state: directory
-        owner: "{{ mongo_config_owner }}"
-        group: "{{ mongo_config_group }}"
-        mode: 0755
-
-    - name: Install MongoDB tools
-      ansible.builtin.apt:
-        name: mongodb-database-tools
-        state: present
-
-    - name: Start MongoDB service
-      ansible.builtin.service:
-        name: mongod
-        state: started
-        enabled: yes
-        
+  roles:
+    - { role: ansible-mongodb-ubuntu }

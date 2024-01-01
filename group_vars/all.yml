@@ -8,9 +8,7 @@ envirnoment: stage # dev/stage/prod
 
 
 # Hashicorp vault
-hashicorp_vault_server_ip: "YOUR_HASHICORP_VAULT_SERVER_IP"
-hashicorp_vault_server_port: 8200
-hashicorp_vault_server: "http://{{ hashicorp_vault_server_ip }}:{{ hashicorp_vault_server_port }}/"
+hashicorp_vault_server: "YOUR_HASHICORP_VAULT_SERVER_ADDRESS"
 
 ## Users authentification
 hashicorp_vault_ansible_username: "YOUR_ANSIBLE_USERNAME"

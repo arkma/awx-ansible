@@ -7,7 +7,7 @@
     release_namespace: "{{ schedule_app_namespace }}"
     create_namespace: true
     dependency_update: true
-    set_values: "{{ schedule_app_backend_overwrite_values }}"
+    set_values: "{{ schedule_app_backend_overwrite_values + schedule_app_both_overwrite_values }}"
 
 - name: Patch Redis headless service
   kubernetes.core.k8s:

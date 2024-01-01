@@ -6,3 +6,4 @@
     chart_ref: "{{ k8s_frontend_chart }}"
     release_namespace: "{{ schedule_app_namespace }}"
     create_namespace: true
+    set_values: "{{ schedule_app_frontend_overwrite_values + schedule_app_both_overwrite_values }}"

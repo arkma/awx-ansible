@@ -16,7 +16,7 @@
             sql_instances.resources |
             selectattr('settings.userLabels.app', 'defined') |
             selectattr('settings.userLabels.app', 'equalto', 'schedule') |
-            selectattr('settings.userLabels.env', 'equalto', env)
+            selectattr('settings.userLabels.env', 'equalto', app_env)
           }}
         
     - name: Extract instace ip and name
@@ -38,51 +38,51 @@
             trim
           }}
 
-    - name: Retrive admin user credentials from vault
-      community.hashi_vault.vault_kv2_get:
-        url: "{{ hashicorp_vault_server }}"
-        auth_method: "userpass"
-        username: "{{ hashicorp_vault_ansible_username }}"
-        password: "{{ hashicorp_vault_ansible_password }}"
-        engine_mount_point: "{{ hashicorp_vault_application_mount_point }}"
-        path: "{{ hashicorp_vault_postgres_path }}"
-      register: postgres_credentials
-      no_log: true # Ensure not to log credentials
+    # - name: Retrive admin user credentials from vault
+    #   community.hashi_vault.vault_kv2_get:
+    #     url: "{{ hashicorp_vault_server }}"
+    #     auth_method: "userpass"
+    #     username: "{{ hashicorp_vault_ansible_username }}"
+    #     password: "{{ hashicorp_vault_ansible_password }}"
+    #     engine_mount_point: "{{ hashicorp_vault_application_mount_point }}"
+    #     path: "{{ hashicorp_vault_postgres_path }}"
+    #   register: postgres_credentials
+    #   no_log: true # Ensure not to log credentials
 
-    - name: Set postgres credentials
-      ansible.builtin.set_fact:
-        postgres_admin_user: "{{ postgres_credentials.secret.admin_username }}"
-        postgres_admin_password: "{{ postgres_credentials.secret.admin_password }}"
-      no_log: true # Ensure not to log credentials
+    # - name: Set postgres credentials
+    #   ansible.builtin.set_fact:
+    #     postgres_admin_user: "{{ postgres_credentials.secret.admin_username }}"
+    #     postgres_admin_password: "{{ postgres_credentials.secret.admin_password }}"
+    #   no_log: true # Ensure not to log credentials
 
-    - name: Create admin user
-      google.cloud.gcp_sql_user:
-        instance:
-          name: "{{ postgres_instace_name }}"
-        host: "" # This has to be empty for PostgresSQL. See https://github.com/ansible-collections/google.cloud/issues/514 
-        name: "{{ postgres_admin_user }}"
-        password: "{{ postgres_admin_password }}"
-        project: "{{ lookup('ansible.builtin.env', gcp_project_env)  }}"
-        auth_kind: serviceaccount
-        state: present
-      no_log: true # Ensure not to log password
+    # - name: Create admin user
+    #   google.cloud.gcp_sql_user:
+    #     instance:
+    #       name: "{{ postgres_instace_name }}"
+    #     host: "" # This has to be empty for PostgresSQL. See https://github.com/ansible-collections/google.cloud/issues/514 
+    #     name: "{{ postgres_admin_user }}"
+    #     password: "{{ postgres_admin_password }}"
+    #     project: "{{ lookup('ansible.builtin.env', gcp_project_env)  }}"
+    #     auth_kind: serviceaccount
+    #     state: present
+    #   no_log: true # Ensure not to log password
 
-    - name: Create database
-      community.postgresql.postgresql_db:
-        login_host: "{{ postgres_host  }}"
-        login_user: "{{ postgres_admin_user  }}"
-        login_password: "{{ postgres_admin_password  }}"
-        port: "{{ postgres_port  }}"
-        name: "{{ postgres_schedule_database_name }}"
-        owner: "{{ postgres_admin_user }}"
-        state: present
+    # - name: Create database
+    #   community.postgresql.postgresql_db:
+    #     login_host: "{{ postgres_host  }}"
+    #     login_user: "{{ postgres_admin_user  }}"
+    #     login_password: "{{ postgres_admin_password  }}"
+    #     port: "{{ postgres_port  }}"
+    #     name: "{{ postgres_schedule_database_name }}"
+    #     owner: "{{ postgres_admin_user }}"
+    #     state: present
         
-    - name: Restore dump for stage and dev env
-      community.postgresql.postgresql_db:        
-        login_host: "{{ postgres_host  }}"
-        login_user: "{{ postgres_admin_user  }}"
-        login_password: "{{ postgres_admin_password  }}"
-        name: "{{ postgres_schedule_database_name }}"
-        state: restore
-        target: "{{ postgres_initial_data_dest }}"
-      when: env == "dev" or env == "stage"
+    # - name: Restore dump for stage and dev env
+    #   community.postgresql.postgresql_db:        
+    #     login_host: "{{ postgres_host  }}"
+    #     login_user: "{{ postgres_admin_user  }}"
+    #     login_password: "{{ postgres_admin_password  }}"
+    #     name: "{{ postgres_schedule_database_name }}"
+    #     state: restore
+    #     target: "{{ postgres_initial_data_dest }}"
+    #   when: app_env == "dev" or app_env == "stage"

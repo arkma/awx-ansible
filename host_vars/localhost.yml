@@ -8,7 +8,7 @@ gcp_project_env: GCP_PROJECT
 gcp_kubeconfig_env: KUBECONFIG
 gcp_kubeconfig_path: "{{ k8s_kubeconfig_base_path }}/gcp_config"
 gcp_conul_dc_name: gcp
-gcp_cluster_name: "{{ env }}-schedule"
+gcp_cluster_name: "{{ app_env }}-schedule"
 gcp_cluster_zone: us-central1-b
 
 # Azure configuraion
@@ -16,10 +16,10 @@ az_kubeconfig_path: "{{ k8s_kubeconfig_base_path }}/az_config"
 az_kubeconfig_mode: "0644"
 az_extract_kubeconfig_type: "admin"
 az_auth_source: "env"
-aks_cluster_rg: "{{ env }}-schedule"
+aks_cluster_rg: "{{ app_env }}-schedule"
 aks_conul_dc_name: aks
 az_cluster_tags:
-  - "env:{{ env }}"
+  - "env:{{ app_env }}"
   - "app:schedule"
 
 

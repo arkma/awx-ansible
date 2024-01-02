@@ -53,6 +53,7 @@
       ansible.builtin.set_fact:
         postgres_admin_user: "{{ postgres_credentials.secret.admin_username }}"
         postgres_admin_password: "{{ postgres_credentials.secret.admin_password }}"
+      no_log: true # Ensure not to log credentials
 
     - name: Create admin user
       google.cloud.gcp_sql_user:

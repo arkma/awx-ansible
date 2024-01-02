@@ -16,7 +16,7 @@
             sql_instances.resources |
             selectattr('settings.userLabels.app', 'defined') |
             selectattr('settings.userLabels.app', 'equalto', 'schedule') |
-            selectattr('settings.userLabels.env', 'equalto', environment)
+            selectattr('settings.userLabels.env', 'equalto', env)
           }}
         
     - name: Extract instace ip and name
@@ -77,7 +77,7 @@
         owner: "{{ postgres_admin_user }}"
         state: present
         
-    - name: Restore dump for stage and dev environment
+    - name: Restore dump for stage and dev env
       community.postgresql.postgresql_db:        
         login_host: "{{ postgres_host  }}"
         login_user: "{{ postgres_admin_user  }}"
@@ -85,4 +85,4 @@
         name: "{{ postgres_schedule_database_name }}"
         state: restore
         target: "{{ postgres_initial_data_dest }}"
-      when: environment == "dev" or environment == "stage"
+      when: env == "dev" or env == "stage"

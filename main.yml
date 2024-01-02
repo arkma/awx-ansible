@@ -13,8 +13,8 @@
 
 - name: Import the kubernetes_aks playbook
   import_playbook: kubernetes_aks.yml
-  when: environment == "stage" or environment == "prod"
+  when: env == "stage" or env == "prod"
 
 - name: Import the cluster peering playbook
   import_playbook: cluster_peering.yml
-  when: environment == "stage" or environment == "prod"
+  when: env == "stage" or env == "prod"

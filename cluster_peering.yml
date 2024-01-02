@@ -29,7 +29,7 @@
     - name: Generate kubeconfig to use kubeclt
       ansible.builtin.shell: 
         cmd: |
-          gcloud container clusters get-credentials "{{ cluster_name }}" --zone "{{ cluster_zone }}" --project "${{ gcp_project_env }}"
+          gcloud container clusters get-credentials "{{ gcp_cluster_name }}" --zone "{{ gcp_cluster_zone }}" --project "${{ gcp_project_env }}"
       environment:
         KUBECONFIG: "{{ gcp_kubeconfig_path }}"
 

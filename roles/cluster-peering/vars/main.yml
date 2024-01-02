@@ -1,0 +1,14 @@
+---
+# vars file for cluster-peering
+datacenters:
+  - name: "{{ peering_acceptor_dc_name }}"
+    kubeconfig_path: "{{ peering_acceptor_kubeconfig_path }}"
+    peering_acceptor: true
+  - name: "{{ peering_dialer_dc_name }}"
+    kubeconfig_path: "{{ peering_dialer_kubeconfig_path }}"
+
+
+consul_peering_secret:
+  name: "consul-peering-token"
+  key: data
+  backend: kubernetes

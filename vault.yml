@@ -1,0 +1,7 @@
+- name: Vault server
+  hosts: service_vault
+  become: yes
+  roles:
+    - { role: geerlingguy.certbot }
+    - { role: geerlingguy.nginx }
+    - { role: ansible-community.ansible-vault, vault_backend: file }

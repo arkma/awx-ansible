@@ -1,27 +1,31 @@
 ---
-# Node exporter
-node_exporter_image: "prom/node-exporter:v1.3.1"
-node_exporter_container_name: node-exporter
-node_exporter_port: 18216
-
-# Redis
-redis_port: 60210
-
-# Postgres
-postgres_port: 46184
-
-# Mongo
-mongo_port: 14587
-
-# Docker
-docker_dir: /opt/docker
-docker_dir_mode: '0755'
-docker_users:
-      - docker_user
-docker_files_owner: docker_user
-docker_files_mode: '0755'
-docker_group: docker
-
-# Ansible
+# Secrets related variables
 ansible_ssh_user: sa_101994008222971342723
-ansible_port: 22
+ansible_ssh_private_key_file: "YOUR_ANSINBLE_PRIVATE_KEY"
+
+# Global
+envirnoment: stage # dev/stage/prod
+
+
+# Hashicorp vault
+hashicorp_vault_server: "YOUR_HASHICORP_VAULT_SERVER_ADDRESS"
+
+## Users authentification
+hashicorp_vault_ansible_username: "YOUR_ANSIBLE_USERNAME"
+hashicorp_vault_ansible_password: "YOUR_ANSIBLE_PASSWORD"
+
+hashicorp_vault_approle_application_role_id_path: "auth/approle/role/app_{{ envirnoment }}/role-id"
+hashicorp_vault_approle_application_secret_id_path: "auth/approle/role/app_{{ envirnoment }}/secret-id"
+
+## Mount points
+hashicorp_vault_application_mount_point: class_schedule
+hashicorp_vault_datadog_mount_point: monitoring
+hashicorp_vault_nexus_mount_point: artifact_repository
+hashicorp_vault_certbot_mount_point: certbot
+
+## Secrets paths
+hashicorp_vault_postgres_path: "{{ envirnoment }}/postgresql"
+hashicorp_vault_mongodb_path: "{{ envirnoment }}/mongodb"
+hashicorp_vault_datadog_path: datadog
+hashicorp_vault_nexus_path: nexus
+hashicorp_vault_certbot_path: config

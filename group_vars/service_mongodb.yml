@@ -1,0 +1,28 @@
+---
+mongo_restart_config: true
+mongo_restart_seconds: 60
+
+mongo_thp: false
+mongo_numa: false
+
+mongo_backup:
+  enabled: false
+  dbs:
+    - admin
+    - config
+    - local
+  user: backup
+  pass: temporary_vaule # this value will be overwritten
+  path: /var/lib/mongo_backups
+  owner: mongodb
+  group: mongodb
+  mode: 0660
+  hour: 10
+  minute: 5
+  day: "*"
+  retention: 46  # in hours
+mongo_net:
+  bindIp: 0.0.0.0
+  port: 27017
+mongo_storage:
+  dbPath: /opt/mongo

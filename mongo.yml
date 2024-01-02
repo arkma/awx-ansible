@@ -1,21 +1,26 @@
-- name: Mongo server
-  hosts: service_mongo
+---
+- name: Install MongoDB
+  hosts: service_mongodb
   become: yes
-  tasks:
-    - name: Run mongo container
-      community.docker.docker_container:
-        name: "{{ mongo_container_name }}"
-        image: "{{ mongo_image }}"
-        state: started
-        restart_policy: always
-        published_ports:
-          - "{{ mongo_port }}:27017"
-        mounts:
-          - source: mongo
-            target: /data/db
-        env:
-          MONGO_INITDB_ROOT_USERNAME: "{{ mongo_initdb_root_username }}"
-          MONGO_INITDB_ROOT_PASSWORD: "{{ mongo_initdb_root_password }}"
-        healthcheck:
-          start_period: 10s
-          test: ["CMD", "mongosh", "--quiet", "127.0.0.1/test", "--eval", "'quit(db.runCommand({ ping: 1 }).ok ? 0 : 2)'"]
+  pre_tasks:
+    - name: Retrive required for mongo secrets from vault
+      community.hashi_vault.vault_kv2_get:
+        url: "{{ hashicorp_vault_server }}"
+        auth_method: userpass
+        username: "{{ hashicorp_vault_ansible_username }}"
+        password: "{{ hashicorp_vault_ansible_password }}"
+        engine_mount_point: "{{ hashicorp_vault_application_mount_point }}"
+        path: "{{ hashicorp_vault_mongodb_path }}"
+      register: mongo_credentials
+      no_log: true # Ensure not to log credentials
+      delegate_to: localhost
+      become: no
+
+    - name: Extract mongo facts
+      ansible.builtin.set_fact:
+        mongo_adminuser_pass:  "{{ mongo_credentials.secret.admin_user_password }}"
+        mongo_admin_pass:      "{{ mongo_credentials.secret.admin_passowrd }}"
+        mongo_backup:          "{{ mongo_backup | combine({'pass':mongo_credentials.secret.backup_password}) }}"
+
+  roles:
+    - { role: ansible-mongodb-ubuntu }

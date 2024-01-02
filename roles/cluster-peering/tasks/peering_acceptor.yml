@@ -1,0 +1,19 @@
+---
+- name: Add peering acceptor
+  kubernetes.core.k8s:
+    kubeconfig: "{{ peering_acceptor_kubeconfig_path }}"
+    state: present
+    namespace: "{{ consul_namespace }}"
+    definition: "{{ lookup('ansible.builtin.template', 'templates/peering-acceptor.yaml.j2') | from_yaml }}"
+
+
+- name: Wait for peering secret to be ready
+  kubernetes.core.k8s_info:
+    kubeconfig: "{{ peering_acceptor_kubeconfig_path }}"
+    kind: "Secret"
+    namespace: "{{ consul_namespace }}"
+    name:  "{{ consul_peering_secret.name }}"
+  retries: 10
+  delay: 20
+  register: peering_secret
+  until: peering_secret.resources | length > 0

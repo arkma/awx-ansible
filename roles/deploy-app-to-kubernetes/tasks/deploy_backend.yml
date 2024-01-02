@@ -1,0 +1,19 @@
+---
+- name: Deploy backend chart
+  kubernetes.core.helm:
+    kubeconfig: "{{ k8s_kubeconfig_path }}"
+    release_name: "{{ schedule_app_backend_name }}"
+    chart_ref: "{{ k8s_backend_chart }}"
+    release_namespace: "{{ schedule_app_namespace }}"
+    create_namespace: true
+    dependency_update: true
+    set_values: "{{ schedule_app_backend_overwrite_values + schedule_app_both_overwrite_values }}"
+
+- name: Patch Redis headless service
+  kubernetes.core.k8s:
+    kubeconfig: "{{ k8s_kubeconfig_path }}"
+    state: patched
+    kind: service
+    namespace: "{{ schedule_app_namespace }}"
+    name: "{{ schedule_app_redis_name }}"
+    definition: "{{ schedule_app_redis_patch_definition }}"

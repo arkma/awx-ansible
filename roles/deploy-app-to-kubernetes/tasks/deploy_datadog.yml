@@ -1,0 +1,32 @@
+---
+- name: Add Datadog repository
+  kubernetes.core.helm_repository:
+    repo_name: "{{ datadog_repo_name }}"
+    repo_url: "{{ datadog_repo_url }}"
+
+- name: Create monitoring namespace
+  kubernetes.core.k8s:
+    kubeconfig: "{{ k8s_kubeconfig_path }}"
+    state: present
+    definition: "{{ lookup('ansible.builtin.template', 'templates/monitoring_namespace.yaml.j2') | from_yaml }}"
+    validate:
+      fail_on_error: yes
+
+- name: Add Datadog secret with API key
+  kubernetes.core.k8s:
+    kubeconfig: "{{ k8s_kubeconfig_path }}"
+    state: present
+    namespace: "{{ datadog_namespace }}"
+    definition: "{{ lookup('ansible.builtin.template', 'templates/datadog_secret.yaml.j2') | from_yaml }}"
+    validate:
+      fail_on_error: yes
+
+- name: Deploy Datadog
+  kubernetes.core.helm:
+    kubeconfig: "{{ k8s_kubeconfig_path }}"
+    chart_ref: "{{ datadog_repo_name }}/{{ datadog_chart_name }}"
+    create_namespace: true
+    release_namespace: "{{ datadog_namespace }}"
+    release_name: "{{ datadog_release_name }}"
+    values_files:
+      - "{{ k8s_datadog_chart_values }}"

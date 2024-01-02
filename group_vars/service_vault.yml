@@ -1,0 +1,76 @@
+
+# Move to playbook vars @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+certbot_email: havrylets.bohdan.softs@gmail.com
+vault_public_hostname: global-vault.smaha.top
+
+# Nginx configuration
+nginx_vhosts:
+  - listen: "443 ssl"
+    server_name: "{{ vault_public_hostname }}"
+    server_redirect_name: "{{ vault_public_hostname }}"
+    server_redirect_port: 80
+    state: "present"
+    ssl_certificate: "{{ ssl_cert_file_location }}"
+    ssl_certificate_key: "{{ ssl_cert_key_location }}"
+    template: "{{ playbook_dir }}/templates/vault_vhost.conf.j2"
+    locations:
+      - path: "/ui/"
+        proxy_pass: "http://{{ vault_localhost_address }}:{{ vault_localhost_port }}/ui/"
+        proxy_headers: |
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $remote_addr;
+          proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_http_version: 1.1
+        proxy_send_timeout: 150
+        proxy_read_timeout: 320
+
+      - path: "/v1/"
+        proxy_pass: "http://{{ vault_localhost_address }}:{{ vault_localhost_port }}/v1/"
+        proxy_headers: | 
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $remote_addr;
+          proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_http_version: 1.1
+        proxy_send_timeout: 150
+        proxy_read_timeout: 320
+
+
+# SSL certificates
+ssl_cert_file_location: "/etc/letsencrypt/live/{{ vault_public_hostname }}/fullchain.pem"
+ssl_cert_key_location: "/etc/letsencrypt/live/{{ vault_public_hostname }}/privkey.pem"
+
+
+# Additional vault role variables
+vault_start_pause_seconds: 60
+vault_listener_localhost_enable: true
+vault_localhost_address: 127.0.0.1
+vault_localhost_port: 8200
+# vault_tls_disable: false
+# vault_tls_copy_keys: true
+# vault_tls_files_remote_src: true
+# vault_tls_disable_client_certs: true
+# vault_tls_src_files: "/etc/letsencrypt/live/{{ vault_public_hostname }}"
+# # vault_address: "{{ hostvars[inventory_hostname]['public_ip'] }}" # We can use `public_ip` because we define it in invetory file 
+# # vault_api_addr: "{{ vault_protocol }}://{{ vault_redirect_address | default(hostvars[inventory_hostname]['public_ip']) }}:{{ vault_port }}"
+# # vault_tls_private_path: "/etc/letsencrypt/live/{{ vault_public_hostname }}"
+
+# vault_tls_cert_file: "cert.pem"
+# vault_tls_key_file: "privkey.pem"
+# vault_tls_ca_file: "chain.pem"
+
+certbot_auto_renew: false
+certbot_auto_renew_user: "root"
+certbot_auto_renew_hour: "4"
+certbot_auto_renew_minute: "0"
+certbot_auto_renew_options: "--quiet"
+certbot_install_method: snap
+certbot_create_if_missing: true
+certbot_create_method: standalone
+certbot_create_standalone_stop_services:
+  - nginx
+certbot_certs:
+  - email: "{{ certbot_email }}"
+    domains:
+      - "{{ vault_public_hostname }}"

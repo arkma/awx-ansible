@@ -1,21 +1,15 @@
 ---
-- name: Include the docker playbook
-  ansible.builtin.import_playbook: docker.yml
+- name: Import the mongo playbook
+  import_playbook: mongo.yml
 
-- name: Include the postgres playbook
-  ansible.builtin.import_playbook: postgres.yml
+- name: Import the postgres playbook
+  import_playbook: postgres.yml
 
-- name: Include the mongo playbook
-  ansible.builtin.import_playbook: mongo.yml
+- name: Import the patch vault playbook
+  import_playbook: patch_vault_secrets.yml
 
-- name: Include the redis playbook
-  ansible.builtin.import_playbook: redis.yml
+- name: Import the kubernetes_gcp playbook
+  import_playbook: kubernetes_gcp.yml
 
-- name: Include the tomcat playbook
-  ansible.builtin.import_playbook: tomcat.yml
-
-- name: Include the node exporter playbook
-  ansible.builtin.import_playbook: node_exporter.yml
-
-- name: Include the grafana playbook
-  ansible.builtin.import_playbook: grafana.yml
+- name: Import the kubernetes_aks playbook
+  import_playbook: kubernetes_aks.yml

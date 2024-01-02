@@ -1,0 +1,11 @@
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: PeeringAcceptor
+metadata:
+  name: {{ peering_dialer_dc_name }}
+  namespace: {{ consul_namespace }}
+spec:
+  peer:
+    secret:
+      name: {{ consul_peering_secret.name }}
+      key: {{ consul_peering_secret.key }}
+      backend: {{ consul_peering_secret.backend }}

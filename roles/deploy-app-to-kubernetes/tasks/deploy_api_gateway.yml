@@ -1,0 +1,16 @@
+---
+- name: Deploy frontend gateway
+  kubernetes.core.helm:
+    kubeconfig: "{{ k8s_kubeconfig_path }}"
+    release_name: "{{ gateway_release_name }}"
+    chart_ref: "{{ k8s_consul_gateway_chart }}"
+    release_namespace: "{{ gateway_release_namespace }}"
+    create_namespace: false
+
+- name: Deploy frontend reference grant
+  kubernetes.core.helm:
+    kubeconfig: "{{ k8s_kubeconfig_path }}"
+    release_name: "{{ gateway_rg_release_name }}"
+    chart_ref: "{{ k8s_consul_gateway_reference_grant_chart }}"
+    release_namespace: "{{ gateway_rg_release_namespace }}"
+    create_namespace: false

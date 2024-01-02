@@ -1,0 +1,134 @@
+# Nginx configuration
+nginx_vhosts:
+  - listen: "443 ssl"
+    server_name: "{{ nexus_public_hostname }}"
+    server_redirect_name: "{{ nexus_public_hostname }}"
+    server_redirect_port: 80
+    state: "present"
+    ssl_certificate: "{{ ssl_cert_file_location }}"
+    ssl_certificate_key: "{{ ssl_cert_key_location }}"
+    template: "{{ playbook_dir }}/templates/nexus_vhost.conf.j2"
+    locations:
+      - path: "/"
+        proxy_pass: "http://{{ nexus_application_host }}:{{ nexus_default_port }}/"
+        proxy_headers: |
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $remote_addr;
+          proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_redirect: "http://{{ nexus_application_host }}:{{ nexus_default_port }}/ $scheme://$http_host/"
+        proxy_http_version: 1.1
+        proxy_send_timeout: 150
+        proxy_read_timeout: 320
+
+      - path: "/v2"
+        proxy_pass: "http://{{ nexus_application_host }}:{{ nexus_default_port }}/repository/{{ nexus_docker_main_repo }}/$request_uri"
+        proxy_headers: | 
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $remote_addr;
+          proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_redirect: "http://{{ nexus_application_host }}:{{ nexus_default_port }}/ $scheme://$http_host/"
+        proxy_http_version: 1.1
+        proxy_send_timeout: 150
+        proxy_read_timeout: 320
+
+# Nexus configuration
+nexus_upgrade: false
+nexus_timezone: UTC
+nexus_delete_default_repos: true
+nexus_anonymous_access: true
+
+nexus_default_port: 8081
+nexus_application_host: "127.0.0.1" # User nginx revrse proxy to pass requests to nexus
+nexus_default_context_path: '/'
+
+# Docker
+nexus_config_docker: true
+nexus_docker_bearer_token_realm: true
+nexus_docker_main_blob_store: docker-images
+nexus_docker_main_repo: blueguys
+
+nexus_blobstores:
+  - name: "{{ nexus_docker_main_blob_store }}"
+    path: /var/nexus/blobs/blue-guys-artifacts
+nexus_repos_docker_hosted:     
+  - name: "{{ nexus_docker_main_repo }}"
+    blob_store: "{{ nexus_docker_main_blob_store }}"
+
+# SSL certificates
+ssl_cert_file_location: "/etc/letsencrypt/live/{{ nexus_public_hostname }}/fullchain.pem"
+ssl_cert_key_location: "/etc/letsencrypt/live/{{ nexus_public_hostname }}/privkey.pem"
+
+nexus_privileges:
+  - name: frontend-deploy
+    description: 'Deployments to frontend'
+    repository: frontend
+    actions:
+      - add
+      - edit
+
+  - name: backend-deploy
+    description: 'Deployments to backend'
+    repository: backend
+    actions:
+      - add
+      - edit
+
+  - name: all-repos-read
+    description: 'Read & Browse access to all repos'
+    repository: '*'
+    actions:
+      - read
+      - browse
+
+nexus_roles:
+  - id: Developpers # can map to a LDAP group id, also used as a key to update a role
+    name: developers
+    description: All developers
+    privileges:
+      - nx-search-read
+      - all-repos-read
+      - frontend-deploy
+      - backend-deploy
+    roles: [] # references to other role names
+
+  - id: Reader
+    name: readers
+    description: Repository readers
+    privileges:
+      - all-repos-read
+    roles: [] # references to other role names
+
+nexus_local_users:
+  - username: "{{ nexus_jenkins_user }}" # used as key to update
+    first_name: "{{ nexus_jenkins_user }}"
+    last_name: CI
+    email: support@company.com
+    password: "{{ nexus_jenkins_password }}"
+    roles:
+      - Developpers # role ID here
+  - username: "{{ nexus_kubernetes_user }}"
+    first_name: "{{ nexus_kubernetes_user }}"
+    last_name: Deploy
+    email: support@company.com
+    password: "{{ nexus_kubernetes_password }}"
+    roles:
+      - Reader # role ID here
+
+
+## certbot
+certbot_auto_renew: false
+certbot_auto_renew_user: "root"
+certbot_auto_renew_hour: "168"
+certbot_auto_renew_minute: "0"
+certbot_auto_renew_options: "--quiet"
+certbot_install_method: snap
+certbot_create_if_missing: true
+certbot_create_method: standalone
+certbot_create_standalone_stop_services:
+  - nginx
+certbot_certs:
+  - email: "{{ certbot_email }}"
+    domains:
+      - "{{ nexus_public_hostname }}"

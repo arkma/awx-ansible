@@ -1,0 +1,10 @@
+---
+# defaults file for cluster-peering
+
+consul_namespace: consul
+
+peering_acceptor_dc_name: gcp
+peering_acceptor_kubeconfig_path: ""
+
+peering_dialer_dc_name: azure
+peering_dialer_kubeconfig_path: ""

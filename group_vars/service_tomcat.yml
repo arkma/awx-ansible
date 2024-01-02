@@ -1,8 +1,0 @@
----
-# Mongo
-mongo_database: schedules
-
-# Tomcat
-schedule_image: "blueguys/schedule-app:latest"
-schedule_container_name: schedule-app
-schedule_port: 28275

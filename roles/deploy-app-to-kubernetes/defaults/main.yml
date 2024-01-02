@@ -12,7 +12,15 @@ k8s_clone_repo: /tmp/k8s_class_schedule_chart
 # Application
 schedule_app_namespace: schedule-app
 schedule_app_backend_name: backend
+schedule_app_backend_image_name: class-schedule-backend
+schedule_app_backend_image_tag: latest
+
 schedule_app_frontend_name: frontend
+schedule_app_frontend_image_name: class-schedule-frontend
+schedule_app_frontend_image_tag: latest
+
+schedule_app_backend_force_update: false
+schedule_app_frontend_force_update: false
 
 # Vault
 hashicorp_vault_server: "YOUR_HASHICORP_VAULT_SERVER"

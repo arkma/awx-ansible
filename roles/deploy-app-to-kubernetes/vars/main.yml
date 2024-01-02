@@ -25,11 +25,24 @@ k8s_datadog_chart_values: "{{ k8s_clone_repo }}/monitoring/datadog-values.yaml"
 k8s_consul_chart_values: "{{ k8s_clone_repo }}/consul/values.yaml"
 
 # Application
+schedule_app_both_overwrite_values:
+  - value: 'imageCredentials.registry={{ nexus_public_hostname }}'
+  - value: 'imageCredentials.username={{ nexus_kubernetes_user }}'
+  - value: 'imageCredentials.password={{ nexus_kubernetes_password }}'
+
 schedule_app_backend_overwrite_values:
+  - value: 'image.name={{ schedule_app_backend_image_name }}'
+  - value: 'image.tag={{ schedule_app_backend_image_tag }}'
   - value: environmentType=stage
   - value: 'secretStore.vaultProvider.server={{ hashicorp_vault_server | quote }}'
   - value: 'secretStore.vaultProvider.auth.roleId={{ hashicorp_vault_approle_application_role_id }}'
   - value: 'secretStore.vaultProvider.auth.secret.secretId={{ hashicorp_vault_approle_application_secret_id }}'
+  - value: 'deployForceUpdate={{ schedule_app_backend_force_update }}'
+
+schedule_app_frontend_overwrite_values:
+  - value: 'image.name={{ schedule_app_frontend_image_name }}'
+  - value: 'image.tag={{ schedule_app_frontend_image_tag }}'
+  - value: 'deployForceUpdate={{ schedule_app_frontend_force_update }}'
 
 # Patch redis headless service. There is no way to set it in helm chart values
 schedule_app_redis_name: "{{ schedule_app_backend_name }}-redis-headless"
